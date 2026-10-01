@@ -25,35 +25,49 @@ python -m http.server 8000 --bind 0.0.0.0
 
 Or just open `index.html` in a browser.
 
-## Cross-device sync (Firebase, free)
+## Cross-device sync (Supabase, free)
 
 By default everything lives in each device's `localStorage`. To share photos +
-texts between two phones, enable cloud sync (Spark plan is free, no billing
-needed — photos sync as small Firestore docs, no Storage bucket required):
+texts between two phones, enable cloud sync. Free tier (≈500MB database + 1GB
+photo storage + realtime) is plenty for personal use:
 
-1. Go to https://console.firebase.google.com → Add project (e.g. `for-ma-ma`).
-   Analytics is optional.
-2. **Authentication** → Get started → Sign-in method → enable **Anonymous** → Save.
-3. **Firestore Database** → Create database → production mode → pick the
-   closest region (e.g. `asia-southeast1`) → Enable. Then open the **Rules**
-   tab, paste this, Publish:
+1. Go to https://supabase.com → New project (free) → wait until it is ready.
+2. **SQL Editor** → New query → paste this → Run:
+   ```sql
+   create table if not exists site_data (
+     key text primary key,
+     data jsonb not null default '{}'::jsonb
+   );
+   create table if not exists photos (
+     id uuid primary key default gen_random_uuid(),
+     site text not null default 'shared',
+     src text not null,
+     path text not null default '',
+     cap text not null default '',
+     ts bigint not null default (extract(epoch from now())*1000)::bigint
+   );
+   alter table site_data enable row level security;
+   alter table photos enable row level security;
+   create policy "anon all site_data" on site_data
+     for all using (true) with check (true);
+   create policy "anon all photos" on photos
+     for all using (true) with check (true);
+   insert into storage.buckets (id, name, public)
+     values ('photos', 'photos', true)
+     on conflict (id) do update set public = true;
+   create policy "public read photos" on storage.objects
+     for select using (bucket_id = 'photos');
+   create policy "anon upload photos" on storage.objects
+     for insert with check (bucket_id = 'photos');
+   create policy "anon delete photos" on storage.objects
+     for delete using (bucket_id = 'photos');
+   alter publication supabase_realtime add table site_data;
+   alter publication supabase_realtime add table photos;
    ```
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{database}/documents {
-       match /love/{docId} {
-         allow read, write: if request.auth != null;
-       }
-       match /lovephotos/{docId} {
-         allow read, write: if request.auth != null;
-       }
-     }
-   }
-   ```
-4. Project Overview → `</>` (web app) → register → copy the `firebaseConfig`
-   object → paste it as `FIREBASE_CONFIG` in `script.js` → commit + push.
-   (Skip the Storage tab — new projects need paid Blaze for Storage buckets,
-   and this site doesn't use Storage.)
+3. **Authentication** → enable **Anonymous sign-ins**.
+4. **Project Settings → API** → copy the **Project URL** + **anon public key** →
+   paste them as `SUPABASE_URL` / `SUPABASE_ANON_KEY` in `script.js` →
+   commit + push.
 
 Notes: language choice stays per-device (not synced). Anyone opening the site
 gets anonymous access, so treat the URL as shared-private.

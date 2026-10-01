@@ -37,7 +37,7 @@ en: {
   "final.edit":"Edit this letter",
   "footer.made":"Made with 💚 just for","footer.offline":"Share this file with her — works offline on phone.",
   "sync.on":"☁️ Synced across devices","sync.off":"📴 This device only (cloud off)",
-  "sync.tip":"If OFF, tap shows the error. Usually: enable Anonymous sign-in, create Firestore DB, publish rules (see README).",
+  "sync.tip":"If OFF, tap shows the error. Usually: URL/key pasted, anonymous sign-in on, setup SQL run (see README).",
   "modal.customize":"Customize your site ✨","modal.her":"Her Name","modal.me":"Your Name","modal.since":"Since Date",
   "modal.herPh":"e.g. Ananya","modal.mePh":"e.g. Rohan",
   "modal.save":"Save","modal.cancel":"Cancel","modal.savedHint":"Saved on this device only — so you can keep it private.",
@@ -75,7 +75,7 @@ my: {
   "final.edit":"ဒီစာကို ပြင်ရန်",
   "footer.made":"💚 ဖြင့် ပြုလုပ်ထားသည်","footer.offline":"ဒီဖိုင်ကို သူနဲ့ မျှဝေလိုက်ပါ — ဖုန်းမှာ အော့ဖ်လိုင်း အလုပ်လုပ်ပါတယ်။",
   "sync.on":"☁️ စက်အားလုံး sync လုပ်ပြီးပါပြီ","sync.off":"📴 ဒီစက်ထဲမှာသာ ရှိသေးတယ် (cloud မချိတ်သေးပါ)",
-  "sync.tip":"OFF ပြနေရင် badge ကိုတို့ပြီး error ကြည့်ပါ။ အများစုက: Anonymous sign-in ဖွင့်၊ Firestore DB ဆောက်၊ rules publish လုပ် (README ကြည့်)။",
+  "sync.tip":"OFF ပြနေရင် badge ကိုတို့ပြီး error ကြည့်ပါ။ အများစုက: URL/key ထည့်ပြီးလား၊ anonymous sign-in ဖွင့်လား၊ SQL run ပြီးလား (README ကြည့်)။",
   "modal.customize":"သင့်ဆိုက်ကို စိတ်ကြိုက်ပြင်ပါ ✨","modal.her":"သူ့နာမည်","modal.me":"သင့်နာမည်","modal.since":"စတင်ခဲ့သည့် ရက်စွဲ",
   "modal.herPh":"ဥပမာ - သဲစု","modal.mePh":"ဥပမာ - အောင်မင်း",
   "modal.save":"သိမ်းရန်","modal.cancel":"မလုပ်တော့ပါ","modal.savedHint":"ဒီစက်ထဲမှာပဲ သိမ်းထားမယ် — လျှို့ဝှက်ထားနိုင်ပါတယ်။",
@@ -91,67 +91,76 @@ let lang = localStorage.getItem(LS.lang) || 'en';
 if(!I18N[lang]) lang = 'en';
 function t(key){ return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key; }
 
-/* ---------- Cloud sync (Firebase, optional) ---------- */
+/* ---------- Cloud sync (Supabase, optional) ---------- */
 /* To sync photos + texts across devices:
-   1) create a free Firebase project (guide in README),
-   2) paste your web config object below, commit + push.
-   While this stays null, everything works on this device only. */
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBseVQlTJPhMbEgcmbQ6aPJjPt_7hZBa_w",
-  authDomain: "for-ma-ma.firebaseapp.com",
-  projectId: "for-ma-ma",
-  storageBucket: "for-ma-ma.firebasestorage.app",
-  messagingSenderId: "24438936205",
-  appId: "1:24438936205:web:e7674c40b34264a79cc8c4"
-};
+   1) create a free Supabase project + run the SQL in README,
+   2) paste your project URL + anon key below, commit + push.
+   While these stay null, everything works on this device only. */
+const SUPABASE_URL = null;
+const SUPABASE_ANON_KEY = null;
 const SITE_ID = 'shared';
 
+const SB_LIB = (typeof supabase !== 'undefined' && supabase && supabase.createClient) ? supabase : null;
+
 const Cloud = {
-  ready: false, db: null, lastError: '',
+  ready: false, sb: null, lastError: '',
   async init(){
-    if(!FIREBASE_CONFIG || typeof firebase === 'undefined'){ this.lastError = 'init: firebase not configured/loaded'; return false; }
+    if(!SUPABASE_URL || !SUPABASE_ANON_KEY || !SB_LIB){ this.lastError = 'init: supabase not configured/loaded'; return false; }
     try{
-      if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-      await firebase.auth().signInAnonymously();
-      this.db = firebase.firestore();
+      if(!this.sb) this.sb = SB_LIB.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const sess = await this.sb.auth.getSession();
+      if(!sess.data.session) await this.sb.auth.signInAnonymously();
       this.ready = true;
       return true;
     }catch(e){ this.lastError = 'init: ' + (e.code || e.message || e); console.warn('Cloud sync off:', e); return false; }
   },
-  doc(name){ return this.db.collection('love').doc(SITE_ID + '_' + name); },
+  rowKey(name){ return SITE_ID + '_' + name; },
+  async getData(name){
+    const res = await this.sb.from('site_data').select('data').eq('key', this.rowKey(name)).maybeSingle();
+    if(res.error) throw res.error;
+    return res.data ? res.data.data : undefined;
+  },
+  async setData(name, data){
+    const res = await this.sb.from('site_data').upsert({key: this.rowKey(name), data: data}, {onConflict: 'key'});
+    if(res.error) throw res.error;
+  },
   save(name, data){
     if(!this.ready) return;
-    try{ this.doc(name).set({data: data, updatedAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}).catch(e=>{ this.lastError = 'save: ' + (e.code||e.message||e); console.warn('cloud save failed:', e); }); }
-    catch(e){ this.lastError = 'save: ' + (e.code||e.message||e); console.warn('cloud save failed:', e); }
+    this.setData(name, data).catch(e=>{ this.lastError = 'save: ' + (e.code || e.message || e); console.warn('cloud save failed:', e); });
   },
-  onDoc(name, cb){
-    if(!this.ready) return;
-    try{ this.doc(name).onSnapshot(s=>{ if(s.exists && s.data()) cb(s.data().data); }, e=>{ this.lastError = 'listen: ' + (e.code||e.message||e); console.warn('cloud listen failed:', e); }); }
-    catch(e){ this.lastError = 'listen: ' + (e.code||e.message||e); console.warn('cloud listen failed:', e); }
+  /* Photos: full-size file in Storage (1GB free) + one row each in the photos table */
+  async fetchPhotos(){
+    const res = await this.sb.from('photos').select('id,src,path,cap').eq('site', SITE_ID).order('ts', {ascending: false});
+    if(res.error) throw res.error;
+    return (res.data || []).map(r=>({sb: r.id, src: r.src || '', cloudPath: r.path || '', cap: r.cap || ''}));
   },
-  /* Photos live in their own docs (no Storage bucket needed on the free plan).
-     Cloud copies are shrunk harder to stay far under the 1MB/doc limit. */
-  /* NOTE: no orderBy here — that would need a composite index. We sort client-side. */
-  photosQuery(){ return this.db.collection('lovephotos').where('site', '==', SITE_ID); },
-  async addPhotoDoc(item){
-    const ref = await this.db.collection('lovephotos').add({site: SITE_ID, src: item.src, cap: item.cap || '', ts: Date.now()});
-    return ref.id;
+  async addPhotoRow(item){
+    const res = await this.sb.from('photos').insert({site: SITE_ID, src: item.src, path: item.path || '', cap: item.cap || ''}).select('id').single();
+    if(res.error) throw res.error;
+    return res.data.id;
   },
-  deletePhotoDoc(id){
-    if(!this.ready || !id) return;
-    try{ this.db.collection('lovephotos').doc(id).delete().catch(()=>{}); }catch(e){}
+  deletePhotoRow(id, path){
+    if(!this.ready || !this.sb) return;
+    try{
+      if(id) this.sb.from('photos').delete().eq('id', id).then(()=>{}, ()=>{});
+      if(path) this.sb.storage.from('photos').remove([path]).then(()=>{}, ()=>{});
+    }catch(e){}
   },
-  async shrinkForCloud(dataUrl){
-    try{ return await shrinkDataURL(dataUrl, 640, 0.65); }
-    catch(e){ return dataUrl; }
+  async uploadFile(blob){
+    const path = SITE_ID + '/' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.jpg';
+    const res = await this.sb.storage.from('photos').upload(path, blob, {contentType: 'image/jpeg', upsert: true});
+    if(res.error) throw res.error;
+    return {path: path, url: this.sb.storage.from('photos').getPublicUrl(path).data.publicUrl};
   }
 };
 
 function persistNames(){ safeSave(LS.names, JSON.stringify(names)); Cloud.save('names', names); }
 function persistLetters(){ safeSave(LS.letters, JSON.stringify(letters)); Cloud.save('letters', letters); }
 function persistPhotos(){ safeSave(LS.photos, JSON.stringify(photos)); ensurePhotosSynced(); }
+/* Local item keeps its full-res copy in src; cloudSrc is the shared Storage URL */
+function effSrc(p){ return p.cloudSrc || p.src; }
 
-/* Upload any not-yet-synced photos as their own Firestore docs (free plan friendly) */
+/* Upload not-yet-synced photos to Supabase Storage (1GB free) + one row each */
 let syncingPhotos = false, photosSyncQueued = false;
 async function ensurePhotosSynced(){
   if(!Cloud.ready) return;
@@ -160,11 +169,18 @@ async function ensurePhotosSynced(){
   try{
     let touched = false;
     for(const p of photos){
-      if(!p.id && p.src){
-        let src = p.src;
-        if(src.indexOf('data:') === 0) src = await Cloud.shrinkForCloud(src);
-        try{ p.id = await Cloud.addPhotoDoc({src: src, cap: p.cap}); touched = true; }
-        catch(e){ Cloud.lastError = 'photo upload: ' + (e.code||e.message||e); console.warn('photo sync failed:', e); }
+      if(!p.sb && p.src){
+        try{
+          if(p.src.indexOf('data:') === 0){
+            const blob = await (await fetch(p.src)).blob();
+            const up = await Cloud.uploadFile(blob);
+            p.cloudSrc = up.url; p.cloudPath = up.path;
+          }else{
+            p.cloudSrc = p.src; p.cloudPath = '';
+          }
+          p.sb = await Cloud.addPhotoRow({src: p.cloudSrc, path: p.cloudPath, cap: p.cap});
+          touched = true;
+        }catch(e){ Cloud.lastError = 'photo upload: ' + (e.code || e.message || e); console.warn('photo sync failed:', e); }
       }
     }
     if(touched) safeSave(LS.photos, JSON.stringify(photos));
@@ -172,11 +188,6 @@ async function ensurePhotosSynced(){
     syncingPhotos = false;
     if(photosSyncQueued){ photosSyncQueued = false; ensurePhotosSynced(); }
   }
-}
-function cloudPhotoList(docs){
-  const list = docs.map(d=>{ const v = d.data() || {}; return {id: d.id, src: v.src || '', cap: v.cap || '', ts: v.ts || 0}; });
-  list.sort((a, b)=> b.ts - a.ts);
-  return list.map(p=>({id: p.id, src: p.src, cap: p.cap}));
 }
 function samePhotoList(a, b){
   if(a.length !== b.length) return false;
@@ -186,30 +197,39 @@ function samePhotoList(a, b){
 function mergePhotosWithPending(list){
   const have = {};
   list.forEach(p=>{ have[p.src] = true; });
-  const pending = photos.filter(p=>!p.id && p.src && !have[p.src]);
+  const pending = photos.filter(p=>!p.sb && p.src && !have[effSrc(p)]);
   return pending.concat(list);
+}
+async function reloadPhotosFromCloud(){
+  try{
+    const rows = await Cloud.fetchPhotos();
+    const list = mergePhotosWithPending(rows.map(r=>({sb: r.sb, src: r.src, cloudPath: r.cloudPath, cap: r.cap})));
+    if(samePhotoList(photos.map(p=>({src: effSrc(p), cap: p.cap || ''})), list)) return;
+    photos = list;
+    safeSave(LS.photos, JSON.stringify(photos));
+    renderGallery();
+  }catch(e){ Cloud.lastError = 'photo pull: ' + (e.code || e.message || e); console.warn('photo pull failed:', e); }
 }
 async function photoSyncStart(){
   try{
-    const snap = await Cloud.photosQuery().get();
-    if(snap.empty){
+    const rows = await Cloud.fetchPhotos();
+    if(!rows.length){
       if(photos.length) ensurePhotosSynced();
     }else{
-      const list = mergePhotosWithPending(cloudPhotoList(snap.docs));
+      const list = mergePhotosWithPending(rows.map(r=>({sb: r.sb, src: r.src, cloudPath: r.cloudPath, cap: r.cap})));
       photos = list;
       safeSave(LS.photos, JSON.stringify(photos));
       renderGallery();
     }
-  }catch(e){ Cloud.lastError = 'photo start: ' + (e.code||e.message||e); console.warn('photo sync start failed:', e); }
+  }catch(e){ Cloud.lastError = 'photo start: ' + (e.code || e.message || e); console.warn('photo sync start failed:', e); }
+}
+function startPhotoRealtime(){
+  if(!Cloud.ready || !Cloud.sb) return;
   try{
-    Cloud.photosQuery().onSnapshot(snap=>{
-      const list = mergePhotosWithPending(cloudPhotoList(snap.docs));
-      if(samePhotoList(photos.map(p=>({src: p.src, cap: p.cap || ''})), list)) return;
-      photos = list;
-      safeSave(LS.photos, JSON.stringify(photos));
-      renderGallery();
-    }, e=>{ Cloud.lastError = 'photo listen: ' + (e.code||e.message||e); console.warn('photo listen failed:', e); });
-  }catch(e){ Cloud.lastError = 'photo listen: ' + (e.code||e.message||e); console.warn('photo listen failed:', e); }
+    Cloud.sb.channel('love-photos')
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'photos'}, ()=>{ reloadPhotosFromCloud(); })
+      .subscribe((status, err)=>{ if(err) Cloud.lastError = 'photo listen: ' + (err.message || err); });
+  }catch(e){ Cloud.lastError = 'photo listen: ' + (e.code || e.message || e); }
 }
 function persistTimeline(){ safeSave(LS.timeline, JSON.stringify(timelineItems)); Cloud.save('timeline', timelineItems); }
 function persistFinal(text){ safeSave(LS.final, text); Cloud.save('final', text); }
@@ -423,6 +443,7 @@ if(!photos){
   const caps = lang==='my' ? demoCaps_my : demoCaps_en;
   photos = demo.map((src,i)=>({src, cap: caps[i%caps.length]}));
 }
+photos.forEach(p=>{ if(p.id) delete p.id; }); /* legacy Firestore ids are unused now */
 
 function renderGallery(){
   galleryGrid.innerHTML = photos.map((p,i)=>`
@@ -451,7 +472,7 @@ function deletePhoto(i){
     const gone = photos[i];
     photos.splice(i,1);
     renderGallery();
-    if(gone) Cloud.deletePhotoDoc(gone.id);
+    if(gone) Cloud.deletePhotoRow(gone.sb, gone.cloudPath);
   }
 }
 renderGallery();
@@ -674,10 +695,8 @@ applyLang(lang);
 /* ---------- Cloud bootstrap: seed-or-pull + live subscribe ---------- */
 async function seedOrPull(section, getLocal, applyCloud, localWins){
   try{
-    const snap = await Cloud.doc(section).get();
-    const hasCloud = snap.exists && snap.data() && snap.data().data !== undefined;
-    if(hasCloud){
-      const cv = snap.data().data;
+    const cv = await Cloud.getData(section);
+    if(cv !== undefined){
       if(localWins && localWins(getLocal(), cv)) Cloud.save(section, getLocal());
       else applyCloud(cv);
     }else{
@@ -685,11 +704,25 @@ async function seedOrPull(section, getLocal, applyCloud, localWins){
     }
   }catch(e){ Cloud.lastError = 'seed/pull ' + section + ': ' + (e.code||e.message||e); console.warn('cloud seed/pull failed:', section, e); }
 }
+const sectionHandlers = {};
 function subscribe(section, getLocal, applyCloud){
-  Cloud.onDoc(section, v=>{
-    try{ if(JSON.stringify(v) === JSON.stringify(getLocal())) return; }catch(e){}
-    applyCloud(v);
-  });
+  sectionHandlers[section] = {getLocal: getLocal, applyCloud: applyCloud};
+}
+function startSiteRealtime(){
+  if(!Cloud.ready || !Cloud.sb) return;
+  try{
+    Cloud.sb.channel('love-site')
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'site_data'}, payload=>{
+        const row = payload.new || {};
+        const key = row.key || '';
+        const section = key.indexOf(SITE_ID + '_') === 0 ? key.slice((SITE_ID + '_').length) : null;
+        const h = section && sectionHandlers[section];
+        if(!h || row.data === undefined) return;
+        try{ if(JSON.stringify(row.data) === JSON.stringify(h.getLocal())) return; }catch(e){}
+        h.applyCloud(row.data);
+      })
+      .subscribe((status, err)=>{ if(err) Cloud.lastError = 'site listen: ' + (err.message || err); });
+  }catch(e){ Cloud.lastError = 'site listen: ' + (e.code||e.message||e); }
 }
 const DEFAULT_NAMES_LIT = {her: 'My Princess', me: 'Me', since: ''};
 const applyNames = v=>{ if(v && typeof v === 'object'){ names = Object.assign({her:'My Princess', me:'Me', since:''}, v); renderNames(); } };
@@ -715,6 +748,8 @@ async function startCloudSync(){
   subscribe('letters', ()=>letters, applyLetters);
   subscribe('timeline', ()=>timelineItems, applyTimeline);
   subscribe('final', ()=>document.getElementById('finalLetterText').innerText, applyFinal);
+  startSiteRealtime();
+  startPhotoRealtime();
   migrateStoredPhotos();
 }
 async function bootCloud(attempt){
