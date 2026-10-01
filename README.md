@@ -28,7 +28,8 @@ Or just open `index.html` in a browser.
 ## Cross-device sync (Firebase, free)
 
 By default everything lives in each device's `localStorage`. To share photos +
-texts between two phones, enable cloud sync (Spark plan is free):
+texts between two phones, enable cloud sync (Spark plan is free, no billing
+needed — photos sync as small Firestore docs, no Storage bucket required):
 
 1. Go to https://console.firebase.google.com → Add project (e.g. `for-ma-ma`).
    Analytics is optional.
@@ -43,24 +44,16 @@ texts between two phones, enable cloud sync (Spark plan is free):
        match /love/{docId} {
          allow read, write: if request.auth != null;
        }
-     }
-   }
-   ```
-4. **Storage** → Get started → production mode → Done. **Rules** tab, paste,
-   Publish:
-   ```
-   rules_version = '2';
-   service firebase.storage {
-     match /b/{bucket}/o {
-       match /photos/{siteId}/{fileName} {
-         allow read: if true;
-         allow write: if request.auth != null;
+       match /lovephotos/{docId} {
+         allow read, write: if request.auth != null;
        }
      }
    }
    ```
-5. Project Overview → `</>` (web app) → register → copy the `firebaseConfig`
+4. Project Overview → `</>` (web app) → register → copy the `firebaseConfig`
    object → paste it as `FIREBASE_CONFIG` in `script.js` → commit + push.
+   (Skip the Storage tab — new projects need paid Blaze for Storage buckets,
+   and this site doesn't use Storage.)
 
 Notes: language choice stays per-device (not synced). Anyone opening the site
 gets anonymous access, so treat the URL as shared-private.

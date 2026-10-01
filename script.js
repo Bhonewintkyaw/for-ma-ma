@@ -105,14 +105,13 @@ const FIREBASE_CONFIG = {
 const SITE_ID = 'shared';
 
 const Cloud = {
-  ready: false, db: null, storage: null,
+  ready: false, db: null,
   async init(){
     if(!FIREBASE_CONFIG || typeof firebase === 'undefined') return false;
     try{
       if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
       await firebase.auth().signInAnonymously();
       this.db = firebase.firestore();
-      this.storage = firebase.storage();
       this.ready = true;
       return true;
     }catch(e){ console.warn('Cloud sync off:', e); return false; }
@@ -128,21 +127,83 @@ const Cloud = {
     try{ this.doc(name).onSnapshot(s=>{ if(s.exists && s.data()) cb(s.data().data); }, e=>console.warn('cloud listen failed:', e)); }
     catch(e){ console.warn('cloud listen failed:', e); }
   },
-  async uploadPhoto(dataUrl){
-    const blob = await (await fetch(dataUrl)).blob();
-    const ref = this.storage.ref('photos/' + SITE_ID + '/' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.jpg');
-    await ref.put(blob, {contentType: 'image/jpeg'});
-    return await ref.getDownloadURL();
+  /* Photos live in their own docs (no Storage bucket needed on the free plan).
+     Cloud copies are shrunk harder to stay far under the 1MB/doc limit. */
+  photosQuery(){ return this.db.collection('lovephotos').where('site', '==', SITE_ID).orderBy('ts', 'desc'); },
+  async addPhotoDoc(item){
+    const ref = await this.db.collection('lovephotos').add({site: SITE_ID, src: item.src, cap: item.cap || '', ts: Date.now()});
+    return ref.id;
   },
-  deletePhotoByUrl(url){
-    if(!this.ready || !url || url.indexOf('data:') === 0) return;
-    try{ this.storage.refFromURL(url).delete().catch(()=>{}); }catch(e){}
+  deletePhotoDoc(id){
+    if(!this.ready || !id) return;
+    try{ this.db.collection('lovephotos').doc(id).delete().catch(()=>{}); }catch(e){}
+  },
+  async shrinkForCloud(dataUrl){
+    try{ return await shrinkDataURL(dataUrl, 640, 0.65); }
+    catch(e){ return dataUrl; }
   }
 };
 
 function persistNames(){ safeSave(LS.names, JSON.stringify(names)); Cloud.save('names', names); }
 function persistLetters(){ safeSave(LS.letters, JSON.stringify(letters)); Cloud.save('letters', letters); }
-function persistPhotos(){ safeSave(LS.photos, JSON.stringify(photos)); Cloud.save('photos', photos); }
+function persistPhotos(){ safeSave(LS.photos, JSON.stringify(photos)); ensurePhotosSynced(); }
+
+/* Upload any not-yet-synced photos as their own Firestore docs (free plan friendly) */
+let syncingPhotos = false, photosSyncQueued = false;
+async function ensurePhotosSynced(){
+  if(!Cloud.ready) return;
+  if(syncingPhotos){ photosSyncQueued = true; return; }
+  syncingPhotos = true;
+  try{
+    let touched = false;
+    for(const p of photos){
+      if(!p.id && p.src){
+        let src = p.src;
+        if(src.indexOf('data:') === 0) src = await Cloud.shrinkForCloud(src);
+        try{ p.id = await Cloud.addPhotoDoc({src: src, cap: p.cap}); touched = true; }
+        catch(e){ console.warn('photo sync failed:', e); }
+      }
+    }
+    if(touched) safeSave(LS.photos, JSON.stringify(photos));
+  }finally{
+    syncingPhotos = false;
+    if(photosSyncQueued){ photosSyncQueued = false; ensurePhotosSynced(); }
+  }
+}
+function cloudPhotoList(docs){ return docs.map(d=>{ const v = d.data() || {}; return {id: d.id, src: v.src || '', cap: v.cap || ''}; }); }
+function samePhotoList(a, b){
+  if(a.length !== b.length) return false;
+  return a.every((p, i)=> p.src === b[i].src && (p.cap || '') === (b[i].cap || ''));
+}
+/* Never drop local uploads that are still waiting for their cloud copy */
+function mergePhotosWithPending(list){
+  const have = {};
+  list.forEach(p=>{ have[p.src] = true; });
+  const pending = photos.filter(p=>!p.id && p.src && !have[p.src]);
+  return pending.concat(list);
+}
+async function photoSyncStart(){
+  try{
+    const snap = await Cloud.photosQuery().get();
+    if(snap.empty){
+      if(photos.length) ensurePhotosSynced();
+    }else{
+      const list = mergePhotosWithPending(cloudPhotoList(snap.docs));
+      photos = list;
+      safeSave(LS.photos, JSON.stringify(photos));
+      renderGallery();
+    }
+  }catch(e){ console.warn('photo sync start failed:', e); }
+  try{
+    Cloud.photosQuery().onSnapshot(snap=>{
+      const list = mergePhotosWithPending(cloudPhotoList(snap.docs));
+      if(samePhotoList(photos.map(p=>({src: p.src, cap: p.cap})), list)) return;
+      photos = list;
+      safeSave(LS.photos, JSON.stringify(photos));
+      renderGallery();
+    }, e=>console.warn('photo listen failed:', e));
+  }catch(e){ console.warn('photo listen failed:', e); }
+}
 function persistTimeline(){ safeSave(LS.timeline, JSON.stringify(timelineItems)); Cloud.save('timeline', timelineItems); }
 function persistFinal(text){ safeSave(LS.final, text); Cloud.save('final', text); }
 function setFinalText(v){ const el = document.getElementById('finalLetterText'); el.innerText = v; el.dataset.customized = '1'; }
@@ -376,7 +437,7 @@ function deletePhoto(i){
     const gone = photos[i];
     photos.splice(i,1);
     renderGallery();
-    if(gone) Cloud.deletePhotoByUrl(gone.src);
+    if(gone) Cloud.deletePhotoDoc(gone.id);
   }
 }
 renderGallery();
@@ -386,12 +447,8 @@ photoUpload.onchange = async e=>{
   const files = [...e.target.files];
   for(const f of files){
     if(f.type && f.type.indexOf('image/') !== 0) continue;
-    const raw = await toDataURL(f);
-    if(!raw) continue;
-    let src = raw;
-    if(Cloud.ready && raw.indexOf('data:') === 0){
-      try{ src = await Cloud.uploadPhoto(raw); }catch(e){ src = raw; }
-    }
+    const src = await toDataURL(f);
+    if(!src) continue;
     photos.unshift({src, cap: f.name.replace(/\.[^/.]+$/,"") || t('js.favPersonCap')});
   }
   renderGallery();
@@ -401,12 +458,8 @@ heroImg.onclick = ()=> heroUpload.click();
 heroUpload.onchange = async e=>{
   const f = e.target.files[0];
   if(!f) return;
-  const raw = await toDataURL(f);
-  if(!raw) return;
-  let src = raw;
-  if(Cloud.ready && raw.indexOf('data:') === 0){
-    try{ src = await Cloud.uploadPhoto(raw); }catch(e){ src = raw; }
-  }
+  const src = await toDataURL(f);
+  if(!src) return;
   photos.unshift({src, cap:t('js.favPersonCap')});
   renderGallery();
 };
@@ -445,7 +498,7 @@ function toDataURL(file){
 }
 
 /* Shrink previously stored oversized uploads so they fit storage again */
-function shrinkDataURL(src, maxDim){
+function shrinkDataURL(src, maxDim, quality){
   return new Promise(res=>{
     const img = new Image();
     img.onload = ()=>{
@@ -456,7 +509,7 @@ function shrinkDataURL(src, maxDim){
         w = Math.max(1, Math.round(w*s)); h = Math.max(1, Math.round(h*s));
         const c = document.createElement('canvas'); c.width = w; c.height = h;
         c.getContext('2d').drawImage(img, 0, 0, w, h);
-        res(c.toDataURL('image/jpeg', 0.82));
+        res(c.toDataURL('image/jpeg', quality || 0.82));
       }catch(e){ res(src); }
     };
     img.onerror = ()=> res(src);
@@ -469,9 +522,6 @@ async function migrateStoredPhotos(){
     if(p.src && p.src.indexOf('data:') === 0 && p.src.length > 600000){
       p.src = await shrinkDataURL(p.src, 1280);
       changed = true;
-    }
-    if(Cloud.ready && p.src && p.src.indexOf('data:') === 0){
-      try{ p.src = await Cloud.uploadPhoto(p.src); changed = true; }catch(e){}
     }
   }
   if(changed) renderGallery();
@@ -614,19 +664,16 @@ function subscribe(section, getLocal, applyCloud){
 const DEFAULT_NAMES_LIT = {her: 'My Princess', me: 'Me', since: ''};
 const applyNames = v=>{ if(v && typeof v === 'object'){ names = Object.assign({her:'My Princess', me:'Me', since:''}, v); renderNames(); } };
 const applyLetters = v=>{ if(Array.isArray(v)){ letters = v; renderLetters(); } };
-const applyPhotos = v=>{ if(Array.isArray(v)){ photos = v; renderGallery(); } };
 const applyTimeline = v=>{ if(Array.isArray(v)){ timelineItems = v; renderStoredTimeline(); } };
 const applyFinal = v=>{ if(typeof v === 'string' && v) setFinalText(v); };
-const hasDataPhoto = arr=>Array.isArray(arr) && arr.some(p=>p && p.src && p.src.indexOf('data:')===0);
 async function startCloudSync(){
   await seedOrPull('names', ()=>names, applyNames, (l,c)=> JSON.stringify(l)!==JSON.stringify(DEFAULT_NAMES_LIT) && JSON.stringify(c)===JSON.stringify(DEFAULT_NAMES_LIT));
   await seedOrPull('letters', ()=>letters, applyLetters, (l,c)=> !isDefaultLetters(l) && isDefaultLetters(c));
-  await seedOrPull('photos', ()=>photos, applyPhotos, (l,c)=> hasDataPhoto(l) && !hasDataPhoto(c));
+  await photoSyncStart();
   await seedOrPull('timeline', ()=>timelineItems, applyTimeline, (l,c)=> l.length>0 && (!Array.isArray(c) || c.length===0));
   await seedOrPull('final', ()=>document.getElementById('finalLetterText').innerText, applyFinal, (l,c)=> !!l && !c);
   subscribe('names', ()=>names, applyNames);
   subscribe('letters', ()=>letters, applyLetters);
-  subscribe('photos', ()=>photos, applyPhotos);
   subscribe('timeline', ()=>timelineItems, applyTimeline);
   subscribe('final', ()=>document.getElementById('finalLetterText').innerText, applyFinal);
   migrateStoredPhotos();
