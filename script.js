@@ -23,7 +23,7 @@ en: {
   "letters.sub":"Tap a card to open it. You can edit every text to make it truly yours.","letters.add":"+ Add New Love Note",
   "gallery.tag":"Her Gallery","gallery.title":"Your beautiful moments",
   "gallery.sub":"Upload her photos. They will stay in your browser (private to your phone).",
-  "gallery.add":"📸 Add Photos","gallery.clear":"Clear demo photos",
+  "gallery.add":"📸 Add Photos",
   "gallery.hint":"Tip: Tap any photo to view full screen. Long-press to delete (on phone).",
   "story.tag":"Our Story","story.title":"How our love grew",
   "story.m1t":"The Day We Met","story.m1d":"The moment my world got brighter. I still remember your smile.","story.m1date":"Day 1",
@@ -41,8 +41,7 @@ en: {
   "modal.herPh":"e.g. Ananya","modal.mePh":"e.g. Rohan",
   "modal.save":"Save","modal.cancel":"Cancel","modal.savedHint":"Saved on this device only — so you can keep it private.",
   "modal.editNote":"Edit Love Note","modal.title":"Title","modal.message":"Message","modal.delete":"Delete",
-  "js.confirmDeleteNote":"Delete this love note?","js.removePhoto":"Remove this photo?",
-  "js.clearDemo":"Clear demo photos? You can then upload your own.",
+  "js.confirmDeleteNote":"Delete this love note?",  "js.removePhoto":"Remove this photo?",
   "js.memTitle":"Memory title (e.g. Our first trip)","js.memDesc":"Short description","js.memDate":"Date label (e.g. 14 Feb 2024)",
   "js.editFinal":"Edit your final letter:",  "js.musicBlocked":"Tap again to allow music (browser blocked autoplay)",
   "js.storageFull":"This site's phone storage is full — delete some photos first, then add new ones.",
@@ -61,7 +60,7 @@ my: {
   "letters.sub":"ကတ်တစ်ခုခုကို တို့ပြီး ဖွင့်ကြည့်ပါ။ စာတိုင်းကို ကိုယ်ပိုင်ဖြစ်အောင် ပြင်နိုင်ပါတယ်။","letters.add":"+ ချစ်ခြင်းမှတ်စု အသစ်ထည့်ရန်",
   "gallery.tag":"သူ့ရဲ့ပုံရိပ်များ","gallery.title":"မမရဲ့ လှပသော အခိုက်အတန့်များ",
   "gallery.sub":"သူ့ဓာတ်ပုံတွေ တင်ထားလိုက်ပါ။ သင့်ဘရောက်ဇာထဲမှာပဲ သိမ်းထားမယ် (သင့်ဖုန်းထဲမှာ လျှို့ဝှက်ပါတယ်)။",
-  "gallery.add":"📸 ဓာတ်ပုံထည့်ရန်","gallery.clear":"နမူနာပုံများ ရှင်းရန်",
+  "gallery.add":"📸 ဓာတ်ပုံထည့်ရန်",
   "gallery.hint":"အကြံပြုချက် - ဓာတ်ပုံကိုတို့ပြီး အပြည့်ကြည့်နိုင်တယ်။ ဖျက်ဖို့ ကြာကြာဖိထားပါ။",
   "story.tag":"ကျွန်ုပ်တို့ ဇာတ်လမ်း","story.title":"ကျွန်ုပ်တို့ အချစ် ကြီးထွားလာပုံ",
   "story.m1t":"ကျွန်ုပ်တို့ စတွေ့ခဲ့တဲ့နေ့","story.m1d":"မောင့်ကမ္ဘာ ပိုတောက်ပသွားတဲ့ အခိုက်အတန့်ပဲ။ မမအပြုံးကို ခုထိ မှတ်မိနေတုန်းပါ။","story.m1date":"နေ့ ၁",
@@ -79,8 +78,7 @@ my: {
   "modal.herPh":"ဥပမာ - သဲစု","modal.mePh":"ဥပမာ - အောင်မင်း",
   "modal.save":"သိမ်းရန်","modal.cancel":"မလုပ်တော့ပါ","modal.savedHint":"ဒီစက်ထဲမှာပဲ သိမ်းထားမယ် — လျှို့ဝှက်ထားနိုင်ပါတယ်။",
   "modal.editNote":"ချစ်ခြင်းမှတ်စု ပြင်ရန်","modal.title":"ခေါင်းစဉ်","modal.message":"စာသား","modal.delete":"ဖျက်ရန်",
-  "js.confirmDeleteNote":"ဒီချစ်ခြင်းမှတ်စုကို ဖျက်မလား?","js.removePhoto":"ဒီဓာတ်ပုံကို ဖယ်ရှားမလား?",
-  "js.clearDemo":"နမူနာဓာတ်ပုံတွေ ရှင်းမလား? ပြီးရင် ကိုယ်ပိုင်ပုံတွေ တင်နိုင်ပါတယ်။",
+  "js.confirmDeleteNote":"ဒီချစ်ခြင်းမှတ်စုကို ဖျက်မလား?",  "js.removePhoto":"ဒီဓာတ်ပုံကို ဖယ်ရှားမလား?",
   "js.memTitle":"အမှတ်တရ ခေါင်းစဉ် (ဥပမာ - ပထမဆုံး ခရီးစဉ်)","js.memDesc":"အကျဉ်းဖော်ပြချက်","js.memDate":"ရက်စွဲအညွှန်း (ဥပမာ - ၁၄ ဖေဖော်ဝါရီ ၂၀၂၄)",
   "js.editFinal":"နောက်ဆုံးစာကို ပြင်ရန်:",  "js.musicBlocked":"ထပ်တို့ပြီး ဂီတခွင့်ပြုပါ (ဘရောက်ဇာက ပိတ်ထားလို့ပါ)",
   "js.storageFull":"ဒီဆိုက်အတွက် ဖုန်းမှတ်ဉာဏ် ပြည့်နေပြီ — ဓာတ်ပုံအချို့ အရင်ဖျက်ပြီးမှ အသစ်ထည့်ပါ။",
@@ -537,12 +535,6 @@ async function migrateStoredPhotos(){
   }
   if(changed) renderGallery();
 }
-document.getElementById('clearPhotosBtn').onclick = ()=>{
-  if(confirm(t('js.clearDemo'))){
-    photos = [];
-    renderGallery();
-  }
-};
 
 /* Lightbox */
 const lb = document.getElementById('lightbox');
@@ -607,18 +599,25 @@ setInterval(()=>{
   setTimeout(()=>h.remove(),10000);
 },700);
 
-/* Music - uses a free romantic lofi */
+/* Music - autoplay on repeat (browsers require one tap first, so we also start on first touch) */
 const audio = document.getElementById('audio');
+audio.src = "https://cdn.pixabay.com/download/audio/2022/03/10/audio_1c8c07e5d8.mp3?filename=romantic-love-piano-112199.mp3";
+audio.loop = true;
 let playing=false;
 function refreshMusicBtn(){
   document.getElementById('playMusicBtn').textContent = playing ? t('hero.pause') : t('hero.play');
 }
+function tryAutoplay(){
+  if(playing) return;
+  audio.play().then(()=>{ playing=true; refreshMusicBtn(); }).catch(()=>{});
+}
 document.getElementById('playMusicBtn').onclick = async ()=>{
   if(!playing){
-    audio.src = "https://cdn.pixabay.com/download/audio/2022/03/10/audio_1c8c07e5d8.mp3?filename=romantic-love-piano-112199.mp3";
     try{ await audio.play(); playing=true; refreshMusicBtn(); } catch(e){ alert(t('js.musicBlocked')) }
   } else { audio.pause(); playing=false; refreshMusicBtn(); }
 };
+tryAutoplay();
+['pointerdown','keydown','touchend'].forEach(ev=>document.addEventListener(ev, tryAutoplay, {once:true}));
 
 /* ---------- Language switcher ---------- */
 function applyLang(l){
