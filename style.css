@@ -321,3 +321,6 @@ body{min-height:100dvh;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 /* Hidden YouTube music player */
 #ytPlayer{position:fixed;width:2px;height:2px;bottom:0;left:0;opacity:0;pointer-events:none;z-index:-1}
+
+/* Cloud sync status badge (tap to see diagnostics) */
+#syncStatus{cursor:pointer;text-decoration:underline dotted}

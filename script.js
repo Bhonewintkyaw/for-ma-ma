@@ -37,6 +37,7 @@ en: {
   "final.edit":"Edit this letter",
   "footer.made":"Made with 💚 just for","footer.offline":"Share this file with her — works offline on phone.",
   "sync.on":"☁️ Synced across devices","sync.off":"📴 This device only (cloud off)",
+  "sync.tip":"If OFF, tap shows the error. Usually: enable Anonymous sign-in, create Firestore DB, publish rules (see README).",
   "modal.customize":"Customize your site ✨","modal.her":"Her Name","modal.me":"Your Name","modal.since":"Since Date",
   "modal.herPh":"e.g. Ananya","modal.mePh":"e.g. Rohan",
   "modal.save":"Save","modal.cancel":"Cancel","modal.savedHint":"Saved on this device only — so you can keep it private.",
@@ -74,6 +75,7 @@ my: {
   "final.edit":"ဒီစာကို ပြင်ရန်",
   "footer.made":"💚 ဖြင့် ပြုလုပ်ထားသည်","footer.offline":"ဒီဖိုင်ကို သူနဲ့ မျှဝေလိုက်ပါ — ဖုန်းမှာ အော့ဖ်လိုင်း အလုပ်လုပ်ပါတယ်။",
   "sync.on":"☁️ စက်အားလုံး sync လုပ်ပြီးပါပြီ","sync.off":"📴 ဒီစက်ထဲမှာသာ ရှိသေးတယ် (cloud မချိတ်သေးပါ)",
+  "sync.tip":"OFF ပြနေရင် badge ကိုတို့ပြီး error ကြည့်ပါ။ အများစုက: Anonymous sign-in ဖွင့်၊ Firestore DB ဆောက်၊ rules publish လုပ် (README ကြည့်)။",
   "modal.customize":"သင့်ဆိုက်ကို စိတ်ကြိုက်ပြင်ပါ ✨","modal.her":"သူ့နာမည်","modal.me":"သင့်နာမည်","modal.since":"စတင်ခဲ့သည့် ရက်စွဲ",
   "modal.herPh":"ဥပမာ - သဲစု","modal.mePh":"ဥပမာ - အောင်မင်း",
   "modal.save":"သိမ်းရန်","modal.cancel":"မလုပ်တော့ပါ","modal.savedHint":"ဒီစက်ထဲမှာပဲ သိမ်းထားမယ် — လျှို့ဝှက်ထားနိုင်ပါတယ်။",
@@ -105,27 +107,27 @@ const FIREBASE_CONFIG = {
 const SITE_ID = 'shared';
 
 const Cloud = {
-  ready: false, db: null,
+  ready: false, db: null, lastError: '',
   async init(){
-    if(!FIREBASE_CONFIG || typeof firebase === 'undefined') return false;
+    if(!FIREBASE_CONFIG || typeof firebase === 'undefined'){ this.lastError = 'init: firebase not configured/loaded'; return false; }
     try{
       if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
       await firebase.auth().signInAnonymously();
       this.db = firebase.firestore();
       this.ready = true;
       return true;
-    }catch(e){ console.warn('Cloud sync off:', e); return false; }
+    }catch(e){ this.lastError = 'init: ' + (e.code || e.message || e); console.warn('Cloud sync off:', e); return false; }
   },
   doc(name){ return this.db.collection('love').doc(SITE_ID + '_' + name); },
   save(name, data){
     if(!this.ready) return;
-    try{ this.doc(name).set({data: data, updatedAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}).catch(e=>console.warn('cloud save failed:', e)); }
-    catch(e){ console.warn('cloud save failed:', e); }
+    try{ this.doc(name).set({data: data, updatedAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}).catch(e=>{ this.lastError = 'save: ' + (e.code||e.message||e); console.warn('cloud save failed:', e); }); }
+    catch(e){ this.lastError = 'save: ' + (e.code||e.message||e); console.warn('cloud save failed:', e); }
   },
   onDoc(name, cb){
     if(!this.ready) return;
-    try{ this.doc(name).onSnapshot(s=>{ if(s.exists && s.data()) cb(s.data().data); }, e=>console.warn('cloud listen failed:', e)); }
-    catch(e){ console.warn('cloud listen failed:', e); }
+    try{ this.doc(name).onSnapshot(s=>{ if(s.exists && s.data()) cb(s.data().data); }, e=>{ this.lastError = 'listen: ' + (e.code||e.message||e); console.warn('cloud listen failed:', e); }); }
+    catch(e){ this.lastError = 'listen: ' + (e.code||e.message||e); console.warn('cloud listen failed:', e); }
   },
   /* Photos live in their own docs (no Storage bucket needed on the free plan).
      Cloud copies are shrunk harder to stay far under the 1MB/doc limit. */
@@ -162,7 +164,7 @@ async function ensurePhotosSynced(){
         let src = p.src;
         if(src.indexOf('data:') === 0) src = await Cloud.shrinkForCloud(src);
         try{ p.id = await Cloud.addPhotoDoc({src: src, cap: p.cap}); touched = true; }
-        catch(e){ console.warn('photo sync failed:', e); }
+        catch(e){ Cloud.lastError = 'photo upload: ' + (e.code||e.message||e); console.warn('photo sync failed:', e); }
       }
     }
     if(touched) safeSave(LS.photos, JSON.stringify(photos));
@@ -198,16 +200,16 @@ async function photoSyncStart(){
       safeSave(LS.photos, JSON.stringify(photos));
       renderGallery();
     }
-  }catch(e){ console.warn('photo sync start failed:', e); }
+  }catch(e){ Cloud.lastError = 'photo start: ' + (e.code||e.message||e); console.warn('photo sync start failed:', e); }
   try{
     Cloud.photosQuery().onSnapshot(snap=>{
       const list = mergePhotosWithPending(cloudPhotoList(snap.docs));
-      if(samePhotoList(photos.map(p=>({src: p.src, cap: p.cap})), list)) return;
+      if(samePhotoList(photos.map(p=>({src: p.src, cap: p.cap || ''})), list)) return;
       photos = list;
       safeSave(LS.photos, JSON.stringify(photos));
       renderGallery();
-    }, e=>console.warn('photo listen failed:', e));
-  }catch(e){ console.warn('photo listen failed:', e); }
+    }, e=>{ Cloud.lastError = 'photo listen: ' + (e.code||e.message||e); console.warn('photo listen failed:', e); });
+  }catch(e){ Cloud.lastError = 'photo listen: ' + (e.code||e.message||e); console.warn('photo listen failed:', e); }
 }
 function persistTimeline(){ safeSave(LS.timeline, JSON.stringify(timelineItems)); Cloud.save('timeline', timelineItems); }
 function persistFinal(text){ safeSave(LS.final, text); Cloud.save('final', text); }
@@ -215,6 +217,9 @@ function setFinalText(v){ const el = document.getElementById('finalLetterText');
 function refreshSyncStatus(){
   const el = document.getElementById('syncStatus');
   if(el) el.textContent = Cloud.ready ? t('sync.on') : t('sync.off');
+}
+function showSyncDiag(){
+  alert((Cloud.ready ? t('sync.on') : t('sync.off')) + '\nError: ' + (Cloud.lastError || 'none') + '\n' + t('sync.tip'));
 }
 function renderStoredTimeline(){
   document.querySelectorAll('#timeline .t-item[data-custom="1"]').forEach(el=>el.remove());
@@ -678,7 +683,7 @@ async function seedOrPull(section, getLocal, applyCloud, localWins){
     }else{
       Cloud.save(section, getLocal());
     }
-  }catch(e){ console.warn('cloud seed/pull failed:', section, e); }
+  }catch(e){ Cloud.lastError = 'seed/pull ' + section + ': ' + (e.code||e.message||e); console.warn('cloud seed/pull failed:', section, e); }
 }
 function subscribe(section, getLocal, applyCloud){
   Cloud.onDoc(section, v=>{
@@ -691,16 +696,32 @@ const applyNames = v=>{ if(v && typeof v === 'object'){ names = Object.assign({h
 const applyLetters = v=>{ if(Array.isArray(v)){ letters = v; renderLetters(); } };
 const applyTimeline = v=>{ if(Array.isArray(v)){ timelineItems = v; renderStoredTimeline(); } };
 const applyFinal = v=>{ if(typeof v === 'string' && v) setFinalText(v); };
+function withTimeout(p, ms, label){
+  return Promise.race([p, new Promise((resolve)=>setTimeout(()=>resolve('timeout'), ms || 25000))]).then(r=>{
+    if(r === 'timeout'){ Cloud.lastError = 'timeout: ' + label; console.warn('cloud timeout:', label); }
+    return r;
+  });
+}
+let cloudStarted = false;
 async function startCloudSync(){
-  await seedOrPull('names', ()=>names, applyNames, (l,c)=> JSON.stringify(l)!==JSON.stringify(DEFAULT_NAMES_LIT) && JSON.stringify(c)===JSON.stringify(DEFAULT_NAMES_LIT));
-  await seedOrPull('letters', ()=>letters, applyLetters, (l,c)=> !isDefaultLetters(l) && isDefaultLetters(c));
-  await photoSyncStart();
-  await seedOrPull('timeline', ()=>timelineItems, applyTimeline, (l,c)=> l.length>0 && (!Array.isArray(c) || c.length===0));
-  await seedOrPull('final', ()=>document.getElementById('finalLetterText').innerText, applyFinal, (l,c)=> !!l && !c);
+  await Promise.all([
+    withTimeout(seedOrPull('names', ()=>names, applyNames, (l,c)=> JSON.stringify(l)!==JSON.stringify(DEFAULT_NAMES_LIT) && JSON.stringify(c)===JSON.stringify(DEFAULT_NAMES_LIT)), 25000, 'names'),
+    withTimeout(seedOrPull('letters', ()=>letters, applyLetters, (l,c)=> !isDefaultLetters(l) && isDefaultLetters(c)), 25000, 'letters'),
+    withTimeout(photoSyncStart(), 30000, 'photos'),
+    withTimeout(seedOrPull('timeline', ()=>timelineItems, applyTimeline, (l,c)=> l.length>0 && (!Array.isArray(c) || c.length===0)), 25000, 'timeline'),
+    withTimeout(seedOrPull('final', ()=>document.getElementById('finalLetterText').innerText, applyFinal, (l,c)=> !!l && !c), 25000, 'final')
+  ]);
   subscribe('names', ()=>names, applyNames);
   subscribe('letters', ()=>letters, applyLetters);
   subscribe('timeline', ()=>timelineItems, applyTimeline);
   subscribe('final', ()=>document.getElementById('finalLetterText').innerText, applyFinal);
   migrateStoredPhotos();
 }
-Cloud.init().then(ok=>{ if(ok) startCloudSync(); refreshSyncStatus(); });
+async function bootCloud(attempt){
+  const ok = await Cloud.init();
+  refreshSyncStatus();
+  if(ok && !cloudStarted){ cloudStarted = true; startCloudSync(); }
+  else if(!ok && attempt < 3){ setTimeout(()=>bootCloud(attempt + 1), attempt === 1 ? 4000 : 10000); }
+}
+document.getElementById('syncStatus').onclick = showSyncDiag;
+bootCloud(1);
