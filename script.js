@@ -94,7 +94,14 @@ function t(key){ return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key; 
    1) create a free Firebase project (guide in README),
    2) paste your web config object below, commit + push.
    While this stays null, everything works on this device only. */
-const FIREBASE_CONFIG = null;
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBseVQlTJPhMbEgcmbQ6aPJjPt_7hZBa_w",
+  authDomain: "for-ma-ma.firebaseapp.com",
+  projectId: "for-ma-ma",
+  storageBucket: "for-ma-ma.firebasestorage.app",
+  messagingSenderId: "24438936205",
+  appId: "1:24438936205:web:e7674c40b34264a79cc8c4"
+};
 const SITE_ID = 'shared';
 
 const Cloud = {
