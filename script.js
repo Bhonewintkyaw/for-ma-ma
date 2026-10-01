@@ -96,8 +96,8 @@ function t(key){ return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key; 
    1) create a free Supabase project + run the SQL in README,
    2) paste your project URL + anon key below, commit + push.
    While these stay null, everything works on this device only. */
-const SUPABASE_URL = null;
-const SUPABASE_ANON_KEY = null;
+const SUPABASE_URL = "https://qdaqrhfjicmoqbzngqxl.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkYXFyaGZqaWNtb3Fiem5ncXhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4NjMxMTIsImV4cCI6MjEwNjQzOTExMn0.13HXp00fQGwM2NkX8NN-HucO8aE7Y3nDz4RzAWY1b5Q";
 const SITE_ID = 'shared';
 
 const SB_LIB = (typeof supabase !== 'undefined' && supabase && supabase.createClient) ? supabase : null;
