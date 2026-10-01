@@ -599,25 +599,39 @@ setInterval(()=>{
   setTimeout(()=>h.remove(),10000);
 },700);
 
-/* Music - autoplay on repeat (browsers require one tap first, so we also start on first touch) */
-const audio = document.getElementById('audio');
-audio.src = "https://cdn.pixabay.com/download/audio/2022/03/10/audio_1c8c07e5d8.mp3?filename=romantic-love-piano-112199.mp3";
-audio.loop = true;
+/* Music - YouTube song on repeat (browser needs one tap first, then it plays + loops) */
+const YT_VIDEO_ID = '4j0Vdb0Sj38';
+let ytPlayer = null, ytReady = false, userGestured = false;
 let playing=false;
 function refreshMusicBtn(){
   document.getElementById('playMusicBtn').textContent = playing ? t('hero.pause') : t('hero.play');
 }
 function tryAutoplay(){
-  if(playing) return;
-  audio.play().then(()=>{ playing=true; refreshMusicBtn(); }).catch(()=>{});
+  if(playing || !ytReady || !ytPlayer) return;
+  try{ ytPlayer.playVideo(); }catch(e){}
 }
-document.getElementById('playMusicBtn').onclick = async ()=>{
-  if(!playing){
-    try{ await audio.play(); playing=true; refreshMusicBtn(); } catch(e){ alert(t('js.musicBlocked')) }
-  } else { audio.pause(); playing=false; refreshMusicBtn(); }
+function markGesture(){ userGestured = true; tryAutoplay(); }
+function onYouTubeIframeAPIReady(){
+  try{
+    ytPlayer = new YT.Player('ytPlayer', {
+      height: '2', width: '2',
+      videoId: YT_VIDEO_ID,
+      playerVars: { autoplay: 1, loop: 1, playlist: YT_VIDEO_ID, controls: 0, disablekb: 1, fs: 0, modestbranding: 1, rel: 0, playsinline: 1 },
+      events: {
+        onReady: ()=>{ ytReady = true; if(userGestured) tryAutoplay(); },
+        onStateChange: e=>{
+          if(e.data === YT.PlayerState.PLAYING){ playing = true; refreshMusicBtn(); }
+          else if(e.data === YT.PlayerState.PAUSED){ playing = false; refreshMusicBtn(); }
+        }
+      }
+    });
+  }catch(e){ console.warn('music player failed:', e); }
+}
+document.getElementById('playMusicBtn').onclick = ()=>{
+  if(!ytReady || !ytPlayer) return;
+  try{ if(playing) ytPlayer.pauseVideo(); else ytPlayer.playVideo(); }catch(e){}
 };
-tryAutoplay();
-['pointerdown','keydown','touchend'].forEach(ev=>document.addEventListener(ev, tryAutoplay, {once:true}));
+['pointerdown','keydown','touchend'].forEach(ev=>document.addEventListener(ev, markGesture, {once:true}));
 
 /* ---------- Language switcher ---------- */
 function applyLang(l){
