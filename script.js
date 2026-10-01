@@ -42,7 +42,8 @@ en: {
   "js.confirmDeleteNote":"Delete this love note?","js.removePhoto":"Remove this photo?",
   "js.clearDemo":"Clear demo photos? You can then upload your own.",
   "js.memTitle":"Memory title (e.g. Our first trip)","js.memDesc":"Short description","js.memDate":"Date label (e.g. 14 Feb 2024)",
-  "js.editFinal":"Edit your final letter:","js.musicBlocked":"Tap again to allow music (browser blocked autoplay)",
+  "js.editFinal":"Edit your final letter:",  "js.musicBlocked":"Tap again to allow music (browser blocked autoplay)",
+  "js.storageFull":"This site's phone storage is full — delete some photos first, then add new ones.",
   "js.myLove":"My Love","js.iLoveYou":"I love you...","js.favPersonCap":"My favorite person ♡"
 },
 my: {
@@ -78,7 +79,8 @@ my: {
   "js.confirmDeleteNote":"ဒီချစ်ခြင်းမှတ်စုကို ဖျက်မလား?","js.removePhoto":"ဒီဓာတ်ပုံကို ဖယ်ရှားမလား?",
   "js.clearDemo":"နမူနာဓာတ်ပုံတွေ ရှင်းမလား? ပြီးရင် ကိုယ်ပိုင်ပုံတွေ တင်နိုင်ပါတယ်။",
   "js.memTitle":"အမှတ်တရ ခေါင်းစဉ် (ဥပမာ - ပထမဆုံး ခရီးစဉ်)","js.memDesc":"အကျဉ်းဖော်ပြချက်","js.memDate":"ရက်စွဲအညွှန်း (ဥပမာ - ၁၄ ဖေဖော်ဝါရီ ၂၀၂၄)",
-  "js.editFinal":"နောက်ဆုံးစာကို ပြင်ရန်:","js.musicBlocked":"ထပ်တို့ပြီး ဂီတခွင့်ပြုပါ (ဘရောက်ဇာက ပိတ်ထားလို့ပါ)",
+  "js.editFinal":"နောက်ဆုံးစာကို ပြင်ရန်:",  "js.musicBlocked":"ထပ်တို့ပြီး ဂီတခွင့်ပြုပါ (ဘရောက်ဇာက ပိတ်ထားလို့ပါ)",
+  "js.storageFull":"ဒီဆိုက်အတွက် ဖုန်းမှတ်ဉာဏ် ပြည့်နေပြီ — ဓာတ်ပုံအချို့ အရင်ဖျက်ပြီးမှ အသစ်ထည့်ပါ။",
   "js.myLove":"ချစ်ရသူ","js.iLoveYou":"ချစ်တယ်...","js.favPersonCap":"မောင့်အချစ်ဆုံး လူလေး ♡"
 }
 };
@@ -194,7 +196,7 @@ document.getElementById('saveNames').onclick = ()=>{
   names.her = document.getElementById('inputHer').value.trim() || names.her;
   names.me = document.getElementById('inputMe').value.trim() || names.me;
   names.since = document.getElementById('inputDate').value;
-  localStorage.setItem(LS.names, JSON.stringify(names));
+  safeSave(LS.names, JSON.stringify(names));
   renderNames();
   nameModal.classList.remove('open');
 };
@@ -216,7 +218,7 @@ function renderLetters(){
   grid.querySelectorAll('.letter-card').forEach(c=>{
     c.onclick = ()=> openEdit(parseInt(c.dataset.i));
   });
-  localStorage.setItem(LS.letters, JSON.stringify(letters));
+  safeSave(LS.letters, JSON.stringify(letters));
 }
 function esc(s){ return s.replace(/[&<>"']/g, m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) }
 
@@ -293,7 +295,7 @@ function renderGallery(){
     el.addEventListener('touchend', ()=> clearTimeout(timer));
     el.addEventListener('contextmenu', e=>{ e.preventDefault(); deletePhoto(parseInt(el.dataset.i)); });
   });
-  localStorage.setItem(LS.photos, JSON.stringify(photos));
+  safeSave(LS.photos, JSON.stringify(photos));
   // hero
   if(photos[0]){
     heroImg.innerHTML = `<img src="${photos[0].src}">`;
@@ -307,11 +309,14 @@ function deletePhoto(i){
   }
 }
 renderGallery();
+setTimeout(migrateStoredPhotos, 800);
 
 photoUpload.onchange = async e=>{
   const files = [...e.target.files];
   for(const f of files){
+    if(f.type && f.type.indexOf('image/') !== 0) continue;
     const src = await toDataURL(f);
+    if(!src) continue;
     photos.unshift({src, cap: f.name.replace(/\.[^/.]+$/,"") || t('js.favPersonCap')});
   }
   renderGallery();
@@ -322,15 +327,72 @@ heroUpload.onchange = async e=>{
   const f = e.target.files[0];
   if(!f) return;
   const src = await toDataURL(f);
+  if(!src) return;
   photos.unshift({src, cap:t('js.favPersonCap')});
   renderGallery();
 };
+/* Save without crashing when storage is full (big photos can exceed the ~5MB limit) */
+function safeSave(key, value){
+  try{ localStorage.setItem(key, value); return true; }
+  catch(e){ alert(t('js.storageFull')); return false; }
+}
+
+/* Compress uploads (phone camera photos are huge) so they fit storage and survive refresh */
 function toDataURL(file){
   return new Promise(res=>{
-    const r=new FileReader();
-    r.onload=()=>res(r.result);
+    const r = new FileReader();
+    r.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        try{
+          let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+          const s = Math.min(1, 1280 / Math.max(w, h));
+          if(s < 1){
+            w = Math.max(1, Math.round(w*s)); h = Math.max(1, Math.round(h*s));
+            const c = document.createElement('canvas'); c.width = w; c.height = h;
+            c.getContext('2d').drawImage(img, 0, 0, w, h);
+            res(c.toDataURL('image/jpeg', 0.82));
+            return;
+          }
+        }catch(e){ /* fall through to original */ }
+        res(r.result);
+      };
+      img.onerror = ()=> res(r.result);
+      img.src = r.result;
+    };
+    r.onerror = ()=> res(null);
     r.readAsDataURL(file);
   });
+}
+
+/* Shrink previously stored oversized uploads so they fit storage again */
+function shrinkDataURL(src, maxDim){
+  return new Promise(res=>{
+    const img = new Image();
+    img.onload = ()=>{
+      try{
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const s = Math.min(1, (maxDim||1280) / Math.max(w, h));
+        if(s >= 1) return res(src);
+        w = Math.max(1, Math.round(w*s)); h = Math.max(1, Math.round(h*s));
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        res(c.toDataURL('image/jpeg', 0.82));
+      }catch(e){ res(src); }
+    };
+    img.onerror = ()=> res(src);
+    img.src = src;
+  });
+}
+async function migrateStoredPhotos(){
+  let changed = false;
+  for(const p of photos){
+    if(p.src && p.src.indexOf('data:') === 0 && p.src.length > 600000){
+      p.src = await shrinkDataURL(p.src, 1280);
+      changed = true;
+    }
+  }
+  if(changed) renderGallery();
 }
 document.getElementById('clearPhotosBtn').onclick = ()=>{
   if(confirm(t('js.clearDemo'))){
@@ -414,7 +476,7 @@ document.getElementById('playMusicBtn').onclick = async ()=>{
 /* ---------- Language switcher ---------- */
 function applyLang(l){
   lang = I18N[l] ? l : 'en';
-  localStorage.setItem(LS.lang, lang);
+  safeSave(LS.lang, lang);
   document.documentElement.lang = lang==='my' ? 'my' : 'en';
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     if(el.id==='finalLetterText' && el.dataset.customized==='1') return;
