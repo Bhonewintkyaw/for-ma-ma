@@ -36,6 +36,7 @@ en: {
   "final.body":"I made this little corner of the internet just for you. Every word here is true, every photo is precious to me. No matter where we are, you can open this on your phone and know how deeply you are loved. You are my today and all of my tomorrows. Yours, always.",
   "final.edit":"Edit this letter",
   "footer.made":"Made with 💚 just for","footer.offline":"Share this file with her — works offline on phone.",
+  "sync.on":"☁️ Synced across devices","sync.off":"📴 This device only (cloud off)",
   "modal.customize":"Customize your site ✨","modal.her":"Her Name","modal.me":"Your Name","modal.since":"Since Date",
   "modal.herPh":"e.g. Ananya","modal.mePh":"e.g. Rohan",
   "modal.save":"Save","modal.cancel":"Cancel","modal.savedHint":"Saved on this device only — so you can keep it private.",
@@ -73,6 +74,7 @@ my: {
   "final.body":"အင်တာနက်ရဲ့ ထောင့်သေးသေးလေးတစ်ခုကို မမတစ်ယောက်တည်းအတွက် ဖန်တီးထားတာပါ။ ဒီစာတိုင်းဟာ အမှန်တွေချည်းပဲ၊ ဓာတ်ပုံတိုင်းဟာ မောင့်အတွက် တန်ဖိုးအရှိဆုံးတွေပါ။ ဘယ်နေရာရောက်ရောက် ဖုန်းလေးဖွင့်ပြီး မမ ဘယ်လောက်ချစ်ခံနေရလဲဆိုတာ သိနိုင်ပါတယ်။ မမဟာ မောင့်ရဲ့ ဒီနေ့ရော၊ မနက်ဖြန်တိုင်းရောပါပဲ။ အမြဲချစ်နေမယ့်သူ။",
   "final.edit":"ဒီစာကို ပြင်ရန်",
   "footer.made":"💚 ဖြင့် ပြုလုပ်ထားသည်","footer.offline":"ဒီဖိုင်ကို သူနဲ့ မျှဝေလိုက်ပါ — ဖုန်းမှာ အော့ဖ်လိုင်း အလုပ်လုပ်ပါတယ်။",
+  "sync.on":"☁️ စက်အားလုံး sync လုပ်ပြီးပါပြီ","sync.off":"📴 ဒီစက်ထဲမှာသာ ရှိသေးတယ် (cloud မချိတ်သေးပါ)",
   "modal.customize":"သင့်ဆိုက်ကို စိတ်ကြိုက်ပြင်ပါ ✨","modal.her":"သူ့နာမည်","modal.me":"သင့်နာမည်","modal.since":"စတင်ခဲ့သည့် ရက်စွဲ",
   "modal.herPh":"ဥပမာ - သဲစု","modal.mePh":"ဥပမာ - အောင်မင်း",
   "modal.save":"သိမ်းရန်","modal.cancel":"မလုပ်တော့ပါ","modal.savedHint":"ဒီစက်ထဲမှာပဲ သိမ်းထားမယ် — လျှို့ဝှက်ထားနိုင်ပါတယ်။",
@@ -129,7 +131,8 @@ const Cloud = {
   },
   /* Photos live in their own docs (no Storage bucket needed on the free plan).
      Cloud copies are shrunk harder to stay far under the 1MB/doc limit. */
-  photosQuery(){ return this.db.collection('lovephotos').where('site', '==', SITE_ID).orderBy('ts', 'desc'); },
+  /* NOTE: no orderBy here — that would need a composite index. We sort client-side. */
+  photosQuery(){ return this.db.collection('lovephotos').where('site', '==', SITE_ID); },
   async addPhotoDoc(item){
     const ref = await this.db.collection('lovephotos').add({site: SITE_ID, src: item.src, cap: item.cap || '', ts: Date.now()});
     return ref.id;
@@ -170,7 +173,11 @@ async function ensurePhotosSynced(){
     if(photosSyncQueued){ photosSyncQueued = false; ensurePhotosSynced(); }
   }
 }
-function cloudPhotoList(docs){ return docs.map(d=>{ const v = d.data() || {}; return {id: d.id, src: v.src || '', cap: v.cap || ''}; }); }
+function cloudPhotoList(docs){
+  const list = docs.map(d=>{ const v = d.data() || {}; return {id: d.id, src: v.src || '', cap: v.cap || '', ts: v.ts || 0}; });
+  list.sort((a, b)=> b.ts - a.ts);
+  return list.map(p=>({id: p.id, src: p.src, cap: p.cap}));
+}
 function samePhotoList(a, b){
   if(a.length !== b.length) return false;
   return a.every((p, i)=> p.src === b[i].src && (p.cap || '') === (b[i].cap || ''));
@@ -207,6 +214,10 @@ async function photoSyncStart(){
 function persistTimeline(){ safeSave(LS.timeline, JSON.stringify(timelineItems)); Cloud.save('timeline', timelineItems); }
 function persistFinal(text){ safeSave(LS.final, text); Cloud.save('final', text); }
 function setFinalText(v){ const el = document.getElementById('finalLetterText'); el.innerText = v; el.dataset.customized = '1'; }
+function refreshSyncStatus(){
+  const el = document.getElementById('syncStatus');
+  if(el) el.textContent = Cloud.ready ? t('sync.on') : t('sync.off');
+}
 function renderStoredTimeline(){
   document.querySelectorAll('#timeline .t-item[data-custom="1"]').forEach(el=>el.remove());
   const tl = document.getElementById('timeline');
@@ -298,7 +309,7 @@ let counterInterval;
 function startCounter(since){
   clearInterval(counterInterval);
   function tick(){
-    const diff = Date.now() - since.getTime();
+    const diff = Math.max(0, Date.now() - since.getTime());
     const days = Math.floor(diff/86400000);
     const hours = Math.floor((diff%86400000)/3600000);
     const mins = Math.floor((diff%3600000)/60000);
@@ -635,6 +646,7 @@ function applyLang(l){
   }
   renderNames();
   refreshMusicBtn();
+  refreshSyncStatus();
 }
 document.getElementById('langBtn').onclick = ()=>{
   applyLang(lang==='en' ? 'my' : 'en');
@@ -678,4 +690,4 @@ async function startCloudSync(){
   subscribe('final', ()=>document.getElementById('finalLetterText').innerText, applyFinal);
   migrateStoredPhotos();
 }
-Cloud.init().then(ok=>{ if(ok) startCloudSync(); });
+Cloud.init().then(ok=>{ if(ok) startCloudSync(); refreshSyncStatus(); });
