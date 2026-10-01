@@ -4,7 +4,8 @@ const LS = {
   letters: 'love_letters',
   photos: 'love_photos',
   timeline: 'love_timeline',
-  lang: 'love_lang'
+  lang: 'love_lang',
+  final: 'love_final'
 };
 
 /* ---------- i18n dictionary (English + Burmese) ---------- */
@@ -87,6 +88,67 @@ my: {
 let lang = localStorage.getItem(LS.lang) || 'en';
 if(!I18N[lang]) lang = 'en';
 function t(key){ return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key; }
+
+/* ---------- Cloud sync (Firebase, optional) ---------- */
+/* To sync photos + texts across devices:
+   1) create a free Firebase project (guide in README),
+   2) paste your web config object below, commit + push.
+   While this stays null, everything works on this device only. */
+const FIREBASE_CONFIG = null;
+const SITE_ID = 'shared';
+
+const Cloud = {
+  ready: false, db: null, storage: null,
+  async init(){
+    if(!FIREBASE_CONFIG || typeof firebase === 'undefined') return false;
+    try{
+      if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+      await firebase.auth().signInAnonymously();
+      this.db = firebase.firestore();
+      this.storage = firebase.storage();
+      this.ready = true;
+      return true;
+    }catch(e){ console.warn('Cloud sync off:', e); return false; }
+  },
+  doc(name){ return this.db.collection('love').doc(SITE_ID + '_' + name); },
+  save(name, data){
+    if(!this.ready) return;
+    try{ this.doc(name).set({data: data, updatedAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}).catch(e=>console.warn('cloud save failed:', e)); }
+    catch(e){ console.warn('cloud save failed:', e); }
+  },
+  onDoc(name, cb){
+    if(!this.ready) return;
+    try{ this.doc(name).onSnapshot(s=>{ if(s.exists && s.data()) cb(s.data().data); }, e=>console.warn('cloud listen failed:', e)); }
+    catch(e){ console.warn('cloud listen failed:', e); }
+  },
+  async uploadPhoto(dataUrl){
+    const blob = await (await fetch(dataUrl)).blob();
+    const ref = this.storage.ref('photos/' + SITE_ID + '/' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.jpg');
+    await ref.put(blob, {contentType: 'image/jpeg'});
+    return await ref.getDownloadURL();
+  },
+  deletePhotoByUrl(url){
+    if(!this.ready || !url || url.indexOf('data:') === 0) return;
+    try{ this.storage.refFromURL(url).delete().catch(()=>{}); }catch(e){}
+  }
+};
+
+function persistNames(){ safeSave(LS.names, JSON.stringify(names)); Cloud.save('names', names); }
+function persistLetters(){ safeSave(LS.letters, JSON.stringify(letters)); Cloud.save('letters', letters); }
+function persistPhotos(){ safeSave(LS.photos, JSON.stringify(photos)); Cloud.save('photos', photos); }
+function persistTimeline(){ safeSave(LS.timeline, JSON.stringify(timelineItems)); Cloud.save('timeline', timelineItems); }
+function persistFinal(text){ safeSave(LS.final, text); Cloud.save('final', text); }
+function setFinalText(v){ const el = document.getElementById('finalLetterText'); el.innerText = v; el.dataset.customized = '1'; }
+function renderStoredTimeline(){
+  document.querySelectorAll('#timeline .t-item[data-custom="1"]').forEach(el=>el.remove());
+  const tl = document.getElementById('timeline');
+  timelineItems.forEach(it=>{
+    const div = document.createElement('div');
+    div.className = 't-item'; div.dataset.custom = '1';
+    div.innerHTML = '<span class="t-dot">💚</span><div class="t-card"><h3>' + esc(it.title || '') + '</h3><p>' + esc(it.desc || '') + '</p><span class="t-date">' + esc(it.date || '') + '</span></div>';
+    tl.appendChild(div);
+  });
+}
 
 /* Default Love Texts - EDIT THESE TO YOUR OWN */
 const defaultLetters_en = [
@@ -196,7 +258,7 @@ document.getElementById('saveNames').onclick = ()=>{
   names.her = document.getElementById('inputHer').value.trim() || names.her;
   names.me = document.getElementById('inputMe').value.trim() || names.me;
   names.since = document.getElementById('inputDate').value;
-  safeSave(LS.names, JSON.stringify(names));
+  persistNames();
   renderNames();
   nameModal.classList.remove('open');
 };
@@ -218,7 +280,7 @@ function renderLetters(){
   grid.querySelectorAll('.letter-card').forEach(c=>{
     c.onclick = ()=> openEdit(parseInt(c.dataset.i));
   });
-  safeSave(LS.letters, JSON.stringify(letters));
+  persistLetters();
 }
 function esc(s){ return s.replace(/[&<>"']/g, m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) }
 
@@ -295,7 +357,7 @@ function renderGallery(){
     el.addEventListener('touchend', ()=> clearTimeout(timer));
     el.addEventListener('contextmenu', e=>{ e.preventDefault(); deletePhoto(parseInt(el.dataset.i)); });
   });
-  safeSave(LS.photos, JSON.stringify(photos));
+  persistPhotos();
   // hero
   if(photos[0]){
     heroImg.innerHTML = `<img src="${photos[0].src}">`;
@@ -304,8 +366,10 @@ function renderGallery(){
 }
 function deletePhoto(i){
   if(confirm(t('js.removePhoto'))){
+    const gone = photos[i];
     photos.splice(i,1);
     renderGallery();
+    if(gone) Cloud.deletePhotoByUrl(gone.src);
   }
 }
 renderGallery();
@@ -315,8 +379,12 @@ photoUpload.onchange = async e=>{
   const files = [...e.target.files];
   for(const f of files){
     if(f.type && f.type.indexOf('image/') !== 0) continue;
-    const src = await toDataURL(f);
-    if(!src) continue;
+    const raw = await toDataURL(f);
+    if(!raw) continue;
+    let src = raw;
+    if(Cloud.ready && raw.indexOf('data:') === 0){
+      try{ src = await Cloud.uploadPhoto(raw); }catch(e){ src = raw; }
+    }
     photos.unshift({src, cap: f.name.replace(/\.[^/.]+$/,"") || t('js.favPersonCap')});
   }
   renderGallery();
@@ -326,8 +394,12 @@ heroImg.onclick = ()=> heroUpload.click();
 heroUpload.onchange = async e=>{
   const f = e.target.files[0];
   if(!f) return;
-  const src = await toDataURL(f);
-  if(!src) return;
+  const raw = await toDataURL(f);
+  if(!raw) return;
+  let src = raw;
+  if(Cloud.ready && raw.indexOf('data:') === 0){
+    try{ src = await Cloud.uploadPhoto(raw); }catch(e){ src = raw; }
+  }
   photos.unshift({src, cap:t('js.favPersonCap')});
   renderGallery();
 };
@@ -391,6 +463,9 @@ async function migrateStoredPhotos(){
       p.src = await shrinkDataURL(p.src, 1280);
       changed = true;
     }
+    if(Cloud.ready && p.src && p.src.indexOf('data:') === 0){
+      try{ p.src = await Cloud.uploadPhoto(p.src); changed = true; }catch(e){}
+    }
   }
   if(changed) renderGallery();
 }
@@ -413,17 +488,21 @@ function openLightbox(i){
 document.getElementById('lbClose').onclick = ()=> lb.classList.remove('open');
 lb.onclick = e=> { if(e.target===lb) lb.classList.remove('open') }
 
+/* Timeline (user-added memories persist per device + cloud) */
+let timelineItems = JSON.parse(localStorage.getItem(LS.timeline) || 'null') || [];
+renderStoredTimeline();
+const storedFinal = localStorage.getItem(LS.final);
+if(storedFinal){ setFinalText(storedFinal); }
+
 /* Timeline add */
 document.getElementById('addMemoryBtn').onclick = ()=>{
   const title = prompt(t('js.memTitle'));
   if(!title) return;
   const desc = prompt(t('js.memDesc')) || "";
   const date = prompt(t('js.memDate')) || "";
-  const tl = document.getElementById('timeline');
-  const div = document.createElement('div');
-  div.className='t-item';
-  div.innerHTML=`<span class="t-dot">💚</span><div class="t-card"><h3>${esc(title)}</h3><p>${esc(desc)}</p><span class="t-date">${esc(date)}</span></div>`;
-  tl.appendChild(div);
+  timelineItems.push({title: title, desc: desc, date: date});
+  persistTimeline();
+  renderStoredTimeline();
 };
 
 /* Reasons shuffle */
@@ -439,7 +518,7 @@ document.getElementById('nextReasonBtn').onclick = ()=>{
 document.getElementById('editFinalBtn').onclick = ()=>{
   const cur = document.getElementById('finalLetterText').innerText;
   const next = prompt(t('js.editFinal'), cur);
-  if(next!==null){ document.getElementById('finalLetterText').innerText = next; document.getElementById('finalLetterText').dataset.customized='1'; }
+  if(next!==null){ setFinalText(next); persistFinal(next); }
 };
 
 /* Nav hamburger */
@@ -504,3 +583,45 @@ document.getElementById('langBtn').onclick = ()=>{
   applyLang(lang==='en' ? 'my' : 'en');
 };
 applyLang(lang);
+
+/* ---------- Cloud bootstrap: seed-or-pull + live subscribe ---------- */
+async function seedOrPull(section, getLocal, applyCloud, localWins){
+  try{
+    const snap = await Cloud.doc(section).get();
+    const hasCloud = snap.exists && snap.data() && snap.data().data !== undefined;
+    if(hasCloud){
+      const cv = snap.data().data;
+      if(localWins && localWins(getLocal(), cv)) Cloud.save(section, getLocal());
+      else applyCloud(cv);
+    }else{
+      Cloud.save(section, getLocal());
+    }
+  }catch(e){ console.warn('cloud seed/pull failed:', section, e); }
+}
+function subscribe(section, getLocal, applyCloud){
+  Cloud.onDoc(section, v=>{
+    try{ if(JSON.stringify(v) === JSON.stringify(getLocal())) return; }catch(e){}
+    applyCloud(v);
+  });
+}
+const DEFAULT_NAMES_LIT = {her: 'My Princess', me: 'Me', since: ''};
+const applyNames = v=>{ if(v && typeof v === 'object'){ names = Object.assign({her:'My Princess', me:'Me', since:''}, v); renderNames(); } };
+const applyLetters = v=>{ if(Array.isArray(v)){ letters = v; renderLetters(); } };
+const applyPhotos = v=>{ if(Array.isArray(v)){ photos = v; renderGallery(); } };
+const applyTimeline = v=>{ if(Array.isArray(v)){ timelineItems = v; renderStoredTimeline(); } };
+const applyFinal = v=>{ if(typeof v === 'string' && v) setFinalText(v); };
+const hasDataPhoto = arr=>Array.isArray(arr) && arr.some(p=>p && p.src && p.src.indexOf('data:')===0);
+async function startCloudSync(){
+  await seedOrPull('names', ()=>names, applyNames, (l,c)=> JSON.stringify(l)!==JSON.stringify(DEFAULT_NAMES_LIT) && JSON.stringify(c)===JSON.stringify(DEFAULT_NAMES_LIT));
+  await seedOrPull('letters', ()=>letters, applyLetters, (l,c)=> !isDefaultLetters(l) && isDefaultLetters(c));
+  await seedOrPull('photos', ()=>photos, applyPhotos, (l,c)=> hasDataPhoto(l) && !hasDataPhoto(c));
+  await seedOrPull('timeline', ()=>timelineItems, applyTimeline, (l,c)=> l.length>0 && (!Array.isArray(c) || c.length===0));
+  await seedOrPull('final', ()=>document.getElementById('finalLetterText').innerText, applyFinal, (l,c)=> !!l && !c);
+  subscribe('names', ()=>names, applyNames);
+  subscribe('letters', ()=>letters, applyLetters);
+  subscribe('photos', ()=>photos, applyPhotos);
+  subscribe('timeline', ()=>timelineItems, applyTimeline);
+  subscribe('final', ()=>document.getElementById('finalLetterText').innerText, applyFinal);
+  migrateStoredPhotos();
+}
+Cloud.init().then(ok=>{ if(ok) startCloudSync(); });
