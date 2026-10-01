@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For My Love 💚</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Floating Hearts Background -->
+<div class="hearts-bg" id="heartsBg"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <span class="logo">My Love 💚</span>
+    <div class="nav-links" id="navLinks">
+      <a href="#home" data-i18n="nav.home">Home</a>
+      <a href="#letters" data-i18n="nav.letters">Letters</a>
+      <a href="#gallery" data-i18n="nav.photos">Photos</a>
+      <a href="#story" data-i18n="nav.story">Our Story</a>
+      <a href="#reasons" data-i18n="nav.reasons">Reasons</a>
+    </div>
+    <div class="nav-actions">
+      <button class="lang-btn" id="langBtn" title="Switch language / ဘာသာစကားပြောင်းရန်">မြန်မာ</button>
+      <button class="hamburger" id="hamburger">☰</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="home" class="hero">
+  <div class="hero-content">
+    <p class="eyebrow" data-i18n="hero.eyebrow">For the most beautiful soul</p>
+    <h1 class="hero-title">
+      <span id="herNameDisplay">My Princess</span>
+      <span class="amp">&</span>
+      <span id="myNameDisplay">Me</span>
+    </h1>
+    <p class="script" data-i18n="hero.forever">Forever & Always</p>
+    <p class="hero-desc" data-i18n="hero.desc">Every photo, every word on this website is a piece of my heart, made just for you.</p>
+    
+    <div class="counter-card">
+      <div class="counter-item"><span id="daysCount">0</span><label data-i18n="hero.days">Days</label></div>
+      <div class="divider"></div>
+      <div class="counter-item"><span id="hoursCount">0</span><label data-i18n="hero.hours">Hours</label></div>
+      <div class="divider"></div>
+      <div class="counter-item"><span id="minsCount">0</span><label data-i18n="hero.mins">Minutes</label></div>
+      <div class="counter-item love-beat">💚</div>
+    </div>
+    <p class="counter-label"><span data-i18n="hero.since">Since we started our story</span> <span id="sinceDateText">—</span></p>
+
+    <div class="hero-btns">
+      <a href="#letters" class="btn btn-primary" data-i18n="hero.lettersBtn">Read My Letters 💌</a>
+      <a href="#gallery" class="btn btn-ghost" data-i18n="hero.photosBtn">See Your Photos 📸</a>
+    </div>
+  </div>
+  <div class="hero-photo-wrap">
+    <div class="polaroid">
+      <div class="polaroid-img" id="heroImg">
+        <span data-i18n="hero.tapPhoto">Tap to add your photo</span>
+        <input type="file" id="heroUpload" accept="image/*" hidden>
+      </div>
+      <p data-i18n="hero.favPerson">my favorite person ♡</p>
+    </div>
+  </div>
+</section>
+
+<!-- EDIT BAR -->
+<div class="edit-bar">
+  <button id="editNamesBtn" class="btn-small" data-i18n="hero.customize">✏️ Customize Names & Date</button>
+  <button id="playMusicBtn" class="btn-small" data-i18n="hero.play">🎵 Play Our Song</button>
+</div>
+
+<!-- LETTERS / LOVE TEXTS -->
+<section id="letters" class="section">
+  <div class="section-head">
+    <span class="tag" data-i18n="letters.tag">Love Letters</span>
+    <h2 data-i18n="letters.title">Words from my heart to yours</h2>
+    <p data-i18n="letters.sub">Tap a card to open it. You can edit every text to make it truly yours.</p>
+  </div>
+
+  <div class="letters-grid" id="lettersGrid">
+    <!-- Cards injected by JS -->
+  </div>
+
+  <div class="add-letter-wrap">
+    <button id="addLetterBtn" class="btn btn-ghost" data-i18n="letters.add">+ Add New Love Note</button>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery" class="section alt">
+  <div class="section-head">
+    <span class="tag" data-i18n="gallery.tag">Her Gallery</span>
+    <h2 data-i18n="gallery.title">Your beautiful moments</h2>
+    <p data-i18n="gallery.sub">Upload her photos. They will stay in your browser (private to your phone).</p>
+  </div>
+
+  <div class="gallery-actions">
+    <label for="photoUpload" class="btn btn-primary" data-i18n="gallery.add">📸 Add Photos</label>
+    <input type="file" id="photoUpload" accept="image/*" multiple hidden>
+    <button id="clearPhotosBtn" class="btn btn-ghost small" data-i18n="gallery.clear">Clear demo photos</button>
+  </div>
+
+  <div class="gallery-grid" id="galleryGrid">
+    <!-- photos injected by JS -->
+  </div>
+  <p class="hint" data-i18n="gallery.hint">Tip: Tap any photo to view full screen. Long-press to delete (on phone).</p>
+</section>
+
+<!-- STORY TIMELINE -->
+<section id="story" class="section">
+  <div class="section-head">
+    <span class="tag" data-i18n="story.tag">Our Story</span>
+    <h2 data-i18n="story.title">How our love grew</h2>
+  </div>
+  <div class="timeline" id="timeline">
+    <div class="t-item">
+      <span class="t-dot">💫</span>
+      <div class="t-card"><h3 data-i18n="story.m1t">The Day We Met</h3><p data-i18n="story.m1d">The moment my world got brighter. I still remember your smile.</p><span class="t-date" data-i18n="story.m1date">Day 1</span></div>
+    </div>
+    <div class="t-item">
+      <span class="t-dot">💬</span>
+      <div class="t-card"><h3 data-i18n="story.m2t">First Long Talk</h3><p data-i18n="story.m2d">Hours felt like minutes. I knew you were special.</p><span class="t-date" data-i18n="story.m2date">Soon After</span></div>
+    </div>
+    <div class="t-item">
+      <span class="t-dot">💚</span>
+      <div class="t-card"><h3 data-i18n="story.m3t">We Fell In Love</h3><p data-i18n="story.m3d">And I never want to fall out of it.</p><span class="t-date" data-i18n="story.m3date">Forever</span></div>
+    </div>
+  </div>
+  <button id="addMemoryBtn" class="btn btn-ghost small" data-i18n="story.add">+ Add Memory</button>
+</section>
+
+<!-- REASONS -->
+<section id="reasons" class="section alt">
+  <div class="section-head">
+    <span class="tag" data-i18n="reasons.tag">100 Reasons</span>
+    <h2 data-i18n="reasons.title">Why I love you</h2>
+    <p data-i18n="reasons.sub">Tap to shuffle a new reason</p>
+  </div>
+  <div class="reason-card" id="reasonCard">
+    <p id="reasonText">Your laugh is my favorite sound in the world.</p>
+    <button id="nextReasonBtn" data-i18n="reasons.next">Another reason 💚</button>
+  </div>
+  <div class="reasons-grid">
+    <span data-i18n="reasons.w1">Your smile</span><span data-i18n="reasons.w2">Your kindness</span><span data-i18n="reasons.w3">Your eyes</span><span data-i18n="reasons.w4">Your voice</span><span data-i18n="reasons.w5">Your care</span><span data-i18n="reasons.w6">Your soul</span>
+  </div>
+</section>
+
+<!-- FINAL LETTER -->
+<section class="section final-letter">
+  <div class="letter-paper">
+    <h2 data-i18n="final.title">To my love,</h2>
+    <p id="finalLetterText" data-i18n="final.body">I made this little corner of the internet just for you. Every word here is true, every photo is precious to me. No matter where we are, you can open this on your phone and know how deeply you are loved. You are my today and all of my tomorrows. Yours, always.</p>
+    <p class="sign">— <span id="signName">Your Love</span> 💚</p>
+    <button id="editFinalBtn" class="btn-small" data-i18n="final.edit">Edit this letter</button>
+  </div>
+</section>
+
+<footer>
+  <p><span data-i18n="footer.made">Made with 💚 just for</span> <span id="footerName">her</span> • <span id="footerDate"></span></p>
+  <p class="small" data-i18n="footer.offline">Share this file with her — works offline on phone.</p>
+</footer>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" class="lightbox">
+  <span id="lbClose">&times;</span>
+  <img id="lbImg" src="">
+  <p id="lbCap"></p>
+</div>
+
+<!-- MODAL: Edit Names -->
+<div id="nameModal" class="modal">
+  <div class="modal-card">
+    <h3 data-i18n="modal.customize">Customize your site ✨</h3>
+    <label><span data-i18n="modal.her">Her Name</span> <input id="inputHer" data-i18n-ph="modal.herPh" placeholder="e.g. Ananya"></label>
+    <label><span data-i18n="modal.me">Your Name</span> <input id="inputMe" data-i18n-ph="modal.mePh" placeholder="e.g. Rohan"></label>
+    <label><span data-i18n="modal.since">Since Date</span> <input id="inputDate" type="date"></label>
+    <div class="modal-btns">
+      <button id="saveNames" class="btn btn-primary" data-i18n="modal.save">Save</button>
+      <button id="closeModal" class="btn btn-ghost" data-i18n="modal.cancel">Cancel</button>
+    </div>
+    <p class="hint" data-i18n="modal.savedHint">Saved on this device only — so you can keep it private.</p>
+  </div>
+</div>
+
+<!-- MODAL: Edit Letter -->
+<div id="editModal" class="modal">
+  <div class="modal-card">
+    <h3 data-i18n="modal.editNote">Edit Love Note</h3>
+    <label><span data-i18n="modal.title">Title</span> <input id="editTitle"></label>
+    <label><span data-i18n="modal.message">Message</span> <textarea id="editMsg" rows="6"></textarea></label>
+    <div class="modal-btns">
+      <button id="saveEdit" class="btn btn-primary" data-i18n="modal.save">Save</button>
+      <button id="deleteEdit" class="btn btn-ghost danger" data-i18n="modal.delete">Delete</button>
+      <button id="cancelEdit" class="btn btn-ghost" data-i18n="modal.cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<audio id="audio" loop></audio>
+
+<script src="script.js"></script>
+</body>
+</html>
