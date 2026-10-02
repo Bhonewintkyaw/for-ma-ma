@@ -158,11 +158,50 @@
   <p class="small" data-i18n="footer.offline">Made with love, for us.</p>
 </footer>
 
-<!-- LIGHTBOX -->
-<div id="lightbox" class="lightbox">
-  <span id="lbClose">&times;</span>
-  <img id="lbImg" src="">
-  <p id="lbCap"></p>
+<!-- LIGHTBOX WITH NAVIGATION ARROWS -->
+<div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button id="lbClose" class="lb-btn lb-close" aria-label="Close photo">&times;</button>
+  <button id="lbPrev" class="lb-btn lb-nav lb-prev" aria-label="Previous photo">&#10094;</button>
+  <div class="lb-content">
+    <img id="lbImg" src="" alt="photo">
+    <div class="lb-footer">
+      <p id="lbCap"></p>
+      <span id="lbCounter" class="lb-counter"></span>
+    </div>
+  </div>
+  <button id="lbNext" class="lb-btn lb-nav lb-next" aria-label="Next photo">&#10095;</button>
+</div>
+
+<!-- DEDICATED LETTER READER POPUP BOX -->
+<div id="letterModal" class="letter-modal" role="dialog" aria-modal="true" aria-label="Love letter reader">
+  <div class="letter-modal-backdrop" id="letterModalBackdrop"></div>
+  <div class="letter-modal-wrapper">
+    <div class="letter-modal-card">
+      <button class="letter-modal-close" id="letterModalClose" aria-label="Close letter">&times;</button>
+      
+      <div class="letter-modal-top">
+        <span class="letter-modal-badge">💌 မေတ္တာစာလွှာ</span>
+        <span class="letter-modal-counter" id="letterModalCounter">စာလွှာ ၁ / ၆</span>
+      </div>
+      
+      <h2 class="letter-modal-title" id="letterModalTitle">မင်္ဂလာပါ မမ</h2>
+      <div class="letter-modal-date" id="letterModalDate">ထာဝရ မမအတွက်</div>
+      
+      <div class="letter-modal-divider">
+        <span class="divider-line"></span>
+        <span class="divider-heart">💚</span>
+        <span class="divider-line"></span>
+      </div>
+      
+      <div class="letter-modal-body" id="letterModalBody"></div>
+      
+      <div class="letter-modal-footer">
+        <button id="letterModalPrev" class="letter-nav-btn prev-btn" aria-label="Previous letter">&#10094; ရှေ့စာလွှာ</button>
+        <span class="letter-nav-hint">စာလွှာများကို ဆက်လက်ဖတ်ရှုပါ</span>
+        <button id="letterModalNext" class="letter-nav-btn next-btn" aria-label="Next letter">နောက်စာလွှာ &#10095;</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Names & anniversary now live in the #settings section -->

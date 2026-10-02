@@ -142,15 +142,110 @@ function startCounter(since){
   counterInterval = setInterval(tick, 60000);
 }
 
-/* ---------- Letters ---------- */
-function renderLetters(){
-  const grid = document.getElementById('lettersGrid');
-  grid.innerHTML = lettersFor().map(l=>
-    '<article class="letter-card"><h3>' + esc(l.title) + '</h3><p>' + esc(l.msg) + '</p><div class="meta"><span>' + esc(l.date) + '</span><span>💌</span></div></article>'
-  ).join('');
+/* ---------- Letters & Dedicated Reader Modal ---------- */
+let currentLetterIdx = 0;
+const letterModal = document.getElementById('letterModal');
+const letterModalTitle = document.getElementById('letterModalTitle');
+const letterModalDate = document.getElementById('letterModalDate');
+const letterModalBody = document.getElementById('letterModalBody');
+const letterModalCounter = document.getElementById('letterModalCounter');
+
+function showLetter(idx){
+  const letters = lettersFor();
+  if(!letters.length) return;
+  if(idx < 0) idx = letters.length - 1;
+  if(idx >= letters.length) idx = 0;
+  currentLetterIdx = idx;
+  const l = letters[idx];
+  if(!l) return;
+  if(letterModalTitle) letterModalTitle.textContent = l.title;
+  if(letterModalDate) letterModalDate.textContent = l.date || '';
+  if(letterModalBody) letterModalBody.textContent = l.msg;
+  if(letterModalCounter) {
+    const burmeseNums = ['၁','၂','၃','၄','၅','၆','၇','၈','၉','၁၀'];
+    const curStr = burmeseNums[currentLetterIdx] || (currentLetterIdx + 1);
+    const totStr = burmeseNums[letters.length - 1] || letters.length;
+    letterModalCounter.textContent = 'စာလွှာ ' + curStr + ' / ' + totStr;
+  }
 }
 
-/* ---------- Gallery ---------- */
+function openLetterModal(idx){
+  showLetter(idx);
+  if(letterModal){
+    letterModal.classList.add('open');
+    document.body.classList.add('modal-open');
+  }
+}
+
+function closeLetterModal(){
+  if(letterModal){
+    letterModal.classList.remove('open');
+    document.body.classList.remove('modal-open');
+  }
+}
+
+function renderLetters(){
+  const grid = document.getElementById('lettersGrid');
+  grid.innerHTML = lettersFor().map((l, i)=>
+    '<article class="letter-card" data-idx="' + i + '">' +
+      '<h3>' + esc(l.title) + '</h3>' +
+      '<p>' + esc(l.msg) + '</p>' +
+      '<div class="meta">' +
+        '<span>' + esc(l.date) + '</span>' +
+        '<span class="read-badge">ဖတ်ရန် တို့ပါ 💌</span>' +
+      '</div>' +
+    '</article>'
+  ).join('');
+  grid.querySelectorAll('.letter-card').forEach(el=>{
+    el.onclick = ()=> openLetterModal(parseInt(el.dataset.idx, 10));
+  });
+}
+
+const letterModalClose = document.getElementById('letterModalClose');
+if(letterModalClose) letterModalClose.onclick = closeLetterModal;
+const letterModalBackdrop = document.getElementById('letterModalBackdrop');
+if(letterModalBackdrop) letterModalBackdrop.onclick = closeLetterModal;
+const letterModalPrev = document.getElementById('letterModalPrev');
+if(letterModalPrev) letterModalPrev.onclick = ()=> showLetter(currentLetterIdx - 1);
+const letterModalNext = document.getElementById('letterModalNext');
+if(letterModalNext) letterModalNext.onclick = ()=> showLetter(currentLetterIdx + 1);
+
+/* ---------- Gallery & Lightbox with Arrows ---------- */
+let currentPhotoIdx = 0;
+const lb = document.getElementById('lightbox');
+const lbImg = document.getElementById('lbImg');
+const lbCap = document.getElementById('lbCap');
+const lbCounter = document.getElementById('lbCounter');
+const lbPrev = document.getElementById('lbPrev');
+const lbNext = document.getElementById('lbNext');
+const lbClose = document.getElementById('lbClose');
+
+function showPhoto(i){
+  if(!PHOTOS.length) return;
+  if(i < 0) i = PHOTOS.length - 1;
+  if(i >= PHOTOS.length) i = 0;
+  currentPhotoIdx = i;
+  if(lbImg) lbImg.src = PHOTOS[i].src;
+  if(lbCap) lbCap.textContent = PHOTOS[i].cap || '';
+  if(lbCounter) lbCounter.textContent = (currentPhotoIdx + 1) + ' / ' + PHOTOS.length;
+}
+
+function openLightbox(i){
+  if(!PHOTOS[i]) return;
+  showPhoto(i);
+  if(lb){
+    lb.classList.add('open');
+    document.body.classList.add('modal-open');
+  }
+}
+
+function closeLightbox(){
+  if(lb){
+    lb.classList.remove('open');
+    document.body.classList.remove('modal-open');
+  }
+}
+
 function renderGallery(){
   const grid = document.getElementById('galleryGrid');
   grid.innerHTML = PHOTOS.map((p, i)=>
@@ -161,18 +256,59 @@ function renderGallery(){
   });
   const heroPhoto = document.getElementById('heroPhoto');
   if(heroPhoto && PHOTOS.length) heroPhoto.src = PHOTOS[0].src;
+  const heroImg = document.getElementById('heroImg');
+  if(heroImg){
+    heroImg.style.cursor = 'pointer';
+    heroImg.title = 'ကြည့်ရှုရန် တို့ပါ 📸';
+    heroImg.onclick = ()=> openLightbox(0);
+  }
 }
-const lb = document.getElementById('lightbox');
-const lbImg = document.getElementById('lbImg');
-const lbCap = document.getElementById('lbCap');
-function openLightbox(i){
-  if(!PHOTOS[i]) return;
-  lbImg.src = PHOTOS[i].src;
-  lbCap.textContent = PHOTOS[i].cap;
-  lb.classList.add('open');
+
+if(lbClose) lbClose.onclick = closeLightbox;
+if(lbPrev) lbPrev.onclick = (e)=>{ e.stopPropagation(); showPhoto(currentPhotoIdx - 1); };
+if(lbNext) lbNext.onclick = (e)=>{ e.stopPropagation(); showPhoto(currentPhotoIdx + 1); };
+if(lb){
+  lb.onclick = e=>{
+    if(e.target === lb || e.target.classList.contains('lb-content')) closeLightbox();
+  };
 }
-document.getElementById('lbClose').onclick = ()=> lb.classList.remove('open');
-lb.onclick = e=>{ if(e.target === lb) lb.classList.remove('open'); };
+
+/* Keyboard navigation & Gestures */
+document.addEventListener('keydown', e=>{
+  if(lb && lb.classList.contains('open')){
+    if(e.key === 'ArrowLeft') showPhoto(currentPhotoIdx - 1);
+    else if(e.key === 'ArrowRight') showPhoto(currentPhotoIdx + 1);
+    else if(e.key === 'Escape') closeLightbox();
+  } else if(letterModal && letterModal.classList.contains('open')){
+    if(e.key === 'ArrowLeft') showLetter(currentLetterIdx - 1);
+    else if(e.key === 'ArrowRight') showLetter(currentLetterIdx + 1);
+    else if(e.key === 'Escape') closeLetterModal();
+  }
+});
+
+function addSwipeSupport(el, onLeft, onRight){
+  if(!el) return;
+  let startX = 0, startY = 0;
+  el.addEventListener('touchstart', e=>{
+    if(e.touches.length === 1){
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }
+  }, {passive:true});
+  el.addEventListener('touchend', e=>{
+    if(e.changedTouches.length === 1){
+      const diffX = e.changedTouches[0].clientX - startX;
+      const diffY = e.changedTouches[0].clientY - startY;
+      if(Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)){
+        if(diffX < 0) onLeft();
+        else onRight();
+      }
+    }
+  }, {passive:true});
+}
+
+addSwipeSupport(lb, ()=> showPhoto(currentPhotoIdx + 1), ()=> showPhoto(currentPhotoIdx - 1));
+addSwipeSupport(letterModal, ()=> showLetter(currentLetterIdx + 1), ()=> showLetter(currentLetterIdx - 1));
 
 /* ---------- Reasons shuffle ---------- */
 const reasonText = document.getElementById('reasonText');
