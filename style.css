@@ -184,7 +184,7 @@ img{max-width:100%;display:block}
   background-image:repeating-linear-gradient(transparent,transparent 27px,#dcfce7 28px);
 }
 .letter-paper h2{font-family:'Great Vibes',cursive;font-size:36px;color:var(--rose-dark)}
-.letter-paper p{line-height:28px;color:#2d3a2f;margin-top:10px}
+.letter-paper p{line-height:28px;color:#2d3a2f;margin-top:10px;white-space:pre-line}
 .sign{font-family:'Great Vibes',cursive;font-size:26px;margin-top:14px}
 #editFinalBtn{margin-top:14px}
 
