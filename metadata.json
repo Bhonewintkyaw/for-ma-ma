@@ -1,0 +1,8 @@
+{
+  "name": "မမအတွက် 💚",
+  "description": "A heartfelt personal romantic anniversary, love letters, and photo gallery website created with love.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

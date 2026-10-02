@@ -250,6 +250,7 @@ function applyLang(){
   renderNames();
   renderLetters();
   renderTimeline();
+  renderGallery();
   reasonText.textContent = reasons_my[0];
   refreshMusicBtn();
 }
