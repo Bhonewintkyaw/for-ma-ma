@@ -166,14 +166,17 @@ const reasons_my = [
 ];
 function reasonsFor(l){ return l === 'my' ? reasons_my : reasons_en; }
 
-/* ---------- Timeline memories (fixed) ---------- */
-const TIMELINE_DEFS = [
-  {id: 'm1', emoji: '💫'},
-  {id: 'm2', emoji: '💬'},
-  {id: 'm3', emoji: '💚'}
+/* ---------- Timeline memories (fixed — our real story) ---------- */
+const TIMELINE = [
+  {emoji: '💫', title: 'မောင်တို့ စတွေ့ခဲ့တဲ့နေ့', desc: 'လှိုင်ကားဂိတ်မှာ မောင့်ကျောင်းကို မမ လာကြိုခဲ့တဲ့နေ့လေးပါ။ မမအပြုံးကို ခုထိ မှတ်မိနေတုန်းပါတယ်။', date: '၁၁.၈.၂၀၂၆ (အင်္ဂါနေ့)'},
+  {emoji: '✨', title: 'ဘုရားတူတူသွားကြတဲ့နေ့လေး', desc: 'မမရဲ့ ထူးခြားတဲ့အပြုံးလေးတွေက ရွှေတိဂုံဘုရားကြီးပေါ်မှာ ပွင့်နေတဲ့ပန်းလေးတွေလိုပါပဲ။ အပျော်ဆုံး အမှတ်တရ နေ့လည်ခင်းလေးပါ မမ။', date: '၁၂.၉.၂၀၂၆ (စနေနေ့)'},
+  {emoji: '💚', title: 'မောင်တို့ ချစ်ခြင်းတွေ ထပ်တူကျခဲ့ပါပြီ', desc: 'မောင် အကြားချင်ဆုံး ဖြစ်တဲ့ ‘ချစ်တယ်’ ဆိုတဲ့ စကားလေးကို မမဆီက ဒီနေ့ ကြားသိခဲ့ရပါပြီ။ ထာဝရအတွက် မောင် မမဆီကို ဘဝတစ်စုံလုံး ပုံအပ်ပါတယ်။', date: 'ထာဝရ'}
 ];
-function timelineText(id, emoji){
-  return {title: t('story.' + id + 't'), desc: t('story.' + id + 'd'), date: t('story.' + id + 'date'), emoji: emoji};
+function renderTimeline(){
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = TIMELINE.map(it=>
+    '<div class="t-item"><span class="t-dot">' + it.emoji + '</span><div class="t-card"><h3>' + esc(it.title) + '</h3><p>' + esc(it.desc) + '</p><span class="t-date">' + esc(it.date) + '</span></div></div>'
+  ).join('');
 }
 
 /* ---------- Helpers ---------- */
@@ -242,15 +245,6 @@ function openLightbox(i){
 }
 document.getElementById('lbClose').onclick = ()=> lb.classList.remove('open');
 lb.onclick = e=>{ if(e.target === lb) lb.classList.remove('open'); };
-
-/* ---------- Timeline ---------- */
-function renderTimeline(){
-  const tl = document.getElementById('timeline');
-  tl.innerHTML = TIMELINE_DEFS.map(d=>{
-    const v = timelineText(d.id, d.emoji);
-    return '<div class="t-item"><span class="t-dot">' + v.emoji + '</span><div class="t-card"><h3>' + esc(v.title) + '</h3><p>' + esc(v.desc) + '</p><span class="t-date">' + esc(v.date) + '</span></div></div>';
-  }).join('');
-}
 
 /* ---------- Reasons shuffle ---------- */
 const reasonText = document.getElementById('reasonText');
