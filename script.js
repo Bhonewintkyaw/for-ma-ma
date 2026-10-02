@@ -824,7 +824,7 @@ function withTimeout(p, ms, label){
   });
 }
 let cloudStarted = false;
-async function startCloudSync(){
+async function syncAllSections(){
   await Promise.all([
     withTimeout(seedOrPull('names', ()=>names, applyNames, (l,c)=> JSON.stringify(l)!==JSON.stringify(DEFAULT_NAMES_LIT) && JSON.stringify(c)===JSON.stringify(DEFAULT_NAMES_LIT)), 25000, 'names'),
     withTimeout(seedOrPull('letters', ()=>letters, applyLetters, (l,c)=> !isDefaultLetters(l) && isDefaultLetters(c)), 25000, 'letters'),
@@ -832,6 +832,9 @@ async function startCloudSync(){
     withTimeout(seedOrPull('timeline', ()=>timelineItems, applyTimeline, (l,c)=> l.length>0 && (!Array.isArray(c) || c.length===0)), 25000, 'timeline'),
     withTimeout(seedOrPull('final', ()=>document.getElementById('finalLetterText').innerText, applyFinal, (l,c)=> !!l && !c), 25000, 'final')
   ]);
+}
+async function startCloudSync(){
+  await syncAllSections();
   subscribe('names', ()=>names, applyNames);
   subscribe('letters', ()=>letters, applyLetters);
   subscribe('timeline', ()=>timelineItems, applyTimeline);
@@ -842,6 +845,19 @@ async function startCloudSync(){
   slog('sync ready');
   migrateStoredPhotos();
 }
+/* Heal edits made while offline: re-sync periodically and whenever the tab returns/network returns */
+async function softResync(){
+  if(!Cloud.ready) return;
+  await syncAllSections();
+  slog('resync done');
+}
+async function maintainSync(){
+  if(Cloud.ready){ softResync(); }
+  else { bootCloud(1); }
+}
+setInterval(maintainSync, 45000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) maintainSync(); });
+window.addEventListener('online', ()=>maintainSync());
 async function bootCloud(attempt){
   const ok = await Cloud.init();
   refreshSyncStatus();
