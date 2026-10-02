@@ -170,7 +170,7 @@ async function ensurePhotosSynced(){
   if(syncingPhotos){ photosSyncQueued = true; return; }
   syncingPhotos = true;
   try{
-    let touched = false;
+    let touched = false, upCount = 0;
     for(const p of photos){
       if(!p.sb && p.src && !isDemoSrc(p.src)){
         try{
@@ -189,11 +189,11 @@ async function ensurePhotosSynced(){
             p.cloudSrc = p.src; p.cloudPath = '';
           }
           p.sb = await Cloud.addPhotoRow({src: p.cloudSrc, path: p.cloudPath, cap: p.cap});
-          touched = true;
+          touched = true; upCount++;
         }catch(e){ Cloud.lastError = 'photo upload: ' + (e.code || e.message || e); console.warn('photo sync failed:', e); }
       }
     }
-    if(touched) safeSave(LS.photos, JSON.stringify(photos));
+    if(touched){ safeSave(LS.photos, JSON.stringify(photos)); slog('photos uploaded: ' + upCount); }
   }finally{
     syncingPhotos = false;
     if(photosSyncQueued){ photosSyncQueued = false; ensurePhotosSynced(); }
@@ -230,6 +230,7 @@ async function reloadPhotosFromCloud(){
     photos = list;
     safeSave(LS.photos, JSON.stringify(photos));
     renderGallery();
+    slog('photos pulled: ' + list.length);
   }catch(e){ Cloud.lastError = 'photo pull: ' + (e.code || e.message || e); console.warn('photo pull failed:', e); }
 }
 async function photoSyncStart(){
@@ -243,6 +244,7 @@ async function photoSyncStart(){
       photos = list;
       safeSave(LS.photos, JSON.stringify(photos));
       renderGallery();
+      slog('photos pulled: ' + list.length);
     }
   }catch(e){ Cloud.lastError = 'photo start: ' + (e.code || e.message || e); console.warn('photo sync start failed:', e); }
 }
@@ -250,7 +252,7 @@ function startPhotoRealtime(){
   if(!Cloud.ready || !Cloud.sb) return;
   try{
     Cloud.sb.channel('love-photos')
-      .on('postgres_changes', {event: '*', schema: 'public', table: 'photos'}, ()=>{ reloadPhotosFromCloud(); })
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'photos'}, ()=>{ slog('photos live event'); reloadPhotosFromCloud(); })
       .subscribe((status, err)=>{ if(err) Cloud.lastError = 'photo listen: ' + (err.message || err); });
   }catch(e){ Cloud.lastError = 'photo listen: ' + (e.code || e.message || e); }
 }
@@ -262,7 +264,16 @@ function refreshSyncStatus(){
   if(el) el.textContent = Cloud.ready ? t('sync.on') : t('sync.off');
 }
 function showSyncDiag(){
-  alert((Cloud.ready ? t('sync.on') : t('sync.off')) + '\nError: ' + (Cloud.lastError || 'none') + '\n' + t('sync.tip'));
+  alert((Cloud.ready ? t('sync.on') : t('sync.off')) + '\nError: ' + (Cloud.lastError || 'none') + '\n---\n' + (syncLog.length ? syncLog.join('\n') : '(no sync activity yet)') + '\n---\n' + t('sync.tip'));
+}
+const syncLog = [];
+function slog(m){
+  try{
+    const line = new Date().toLocaleTimeString() + ' ' + m;
+    syncLog.push(line);
+    if(syncLog.length > 12) syncLog.shift();
+    console.log('[sync]', line);
+  }catch(e){}
 }
 const DEF_TIMELINE = [
   {id: 'm1', emoji: '💫', def: true},
@@ -773,10 +784,10 @@ async function seedOrPull(section, getLocal, applyCloud, localWins){
   try{
     const cv = await Cloud.getData(section);
     if(cv !== undefined){
-      if(localWins && localWins(getLocal(), cv)) Cloud.save(section, getLocal());
-      else applyCloud(cv);
+      if(localWins && localWins(getLocal(), cv)){ Cloud.save(section, getLocal()); slog(section + ': kept local, pushing up'); }
+      else{ applyCloud(cv); slog(section + ': pulled from cloud'); }
     }else{
-      Cloud.save(section, getLocal());
+      Cloud.save(section, getLocal()); slog(section + ': seeded to cloud');
     }
   }catch(e){ Cloud.lastError = 'seed/pull ' + section + ': ' + (e.code||e.message||e); console.warn('cloud seed/pull failed:', section, e); }
 }
@@ -795,6 +806,7 @@ function startSiteRealtime(){
         const h = section && sectionHandlers[section];
         if(!h || row.data === undefined) return;
         try{ if(JSON.stringify(row.data) === JSON.stringify(h.getLocal())) return; }catch(e){}
+        slog(section + ' live update');
         h.applyCloud(row.data);
       })
       .subscribe((status, err)=>{ if(err) Cloud.lastError = 'site listen: ' + (err.message || err); });
@@ -826,13 +838,15 @@ async function startCloudSync(){
   subscribe('final', ()=>document.getElementById('finalLetterText').innerText, applyFinal);
   startSiteRealtime();
   startPhotoRealtime();
+  if(Cloud.lastError.indexOf('timeout:') === 0) Cloud.lastError = '';
+  slog('sync ready');
   migrateStoredPhotos();
 }
 async function bootCloud(attempt){
   const ok = await Cloud.init();
   refreshSyncStatus();
-  if(ok && !cloudStarted){ cloudStarted = true; startCloudSync(); }
-  else if(!ok && attempt < 3){ setTimeout(()=>bootCloud(attempt + 1), attempt === 1 ? 4000 : 10000); }
+  if(ok && !cloudStarted){ cloudStarted = true; slog('connected'); startCloudSync(); }
+  else if(!ok){ slog('connect failed: ' + Cloud.lastError); if(attempt < 3) setTimeout(()=>bootCloud(attempt + 1), attempt === 1 ? 4000 : 10000); }
 }
 document.getElementById('syncStatus').onclick = showSyncDiag;
 bootCloud(1);
