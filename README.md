@@ -61,6 +61,8 @@ photo storage + realtime) is plenty for personal use:
      for insert with check (bucket_id = 'photos');
    create policy "anon delete photos" on storage.objects
      for delete using (bucket_id = 'photos');
+   create policy "anon update photos" on storage.objects
+     for update using (bucket_id = 'photos') with check (bucket_id = 'photos');
    alter publication supabase_realtime add table site_data;
    alter publication supabase_realtime add table photos;
    ```

@@ -151,7 +151,7 @@ const Cloud = {
   },
   async uploadFile(blob){
     const path = SITE_ID + '/' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.jpg';
-    const res = await this.sb.storage.from('photos').upload(path, blob, {contentType: 'image/jpeg', upsert: true});
+    const res = await this.sb.storage.from('photos').upload(path, blob, {contentType: 'image/jpeg'});
     if(res.error) throw res.error;
     return {path: path, url: this.sb.storage.from('photos').getPublicUrl(path).data.publicUrl};
   }
@@ -175,9 +175,16 @@ async function ensurePhotosSynced(){
       if(!p.sb && p.src && !isDemoSrc(p.src)){
         try{
           if(p.src.indexOf('data:') === 0){
-            const blob = await (await fetch(p.src)).blob();
-            const up = await Cloud.uploadFile(blob);
-            p.cloudSrc = up.url; p.cloudPath = up.path;
+            try{
+              const blob = await (await fetch(p.src)).blob();
+              const up = await Cloud.uploadFile(blob);
+              p.cloudSrc = up.url; p.cloudPath = up.path;
+            }catch(uerr){
+              /* Storage refused (missing bucket/policy) → keep small bytes in the row instead */
+              p.cloudSrc = await shrinkDataURL(p.src, 640, 0.65);
+              p.cloudPath = '';
+              Cloud.lastError = 'photo storage fallback: ' + (uerr.code || uerr.message || uerr);
+            }
           }else{
             p.cloudSrc = p.src; p.cloudPath = '';
           }
