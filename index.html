@@ -23,6 +23,7 @@
       <a href="#gallery" data-i18n="nav.photos">Photos</a>
       <a href="#story" data-i18n="nav.story">Our Story</a>
       <a href="#reasons" data-i18n="nav.reasons">Reasons</a>
+      <a href="#settings" data-i18n="nav.settings">Settings</a>
     </div>
     <div class="nav-actions">
       <button class="lang-btn" id="langBtn" title="Switch language / ဘာသာစကားပြောင်းရန်">မြန်မာ</button>
@@ -69,11 +70,7 @@
   </div>
 </section>
 
-<!-- EDIT BAR -->
-<div class="edit-bar">
-  <button id="editNamesBtn" class="btn-small" data-i18n="hero.customize">✏️ Customize Names & Date</button>
-  <button id="playMusicBtn" class="btn-small" data-i18n="hero.play">🎵 Play Our Song</button>
-</div>
+<!-- Names, date & music now live in the #settings section below -->
 
 <!-- LETTERS / LOVE TEXTS -->
 <section id="letters" class="section">
@@ -160,6 +157,21 @@
   </div>
 </section>
 
+<!-- SETTINGS -->
+<section id="settings" class="section">
+  <div class="section-head">
+    <span class="tag" data-i18n="settings.tag">Settings</span>
+    <h2 data-i18n="settings.title">Site settings</h2>
+  </div>
+  <div class="settings-card">
+    <label><span data-i18n="modal.her">Her Name</span><input id="setHer" maxlength="30"></label>
+    <label><span data-i18n="modal.me">Your Name</span><input id="setMe" maxlength="30"></label>
+    <button id="saveSettings" class="btn btn-primary" data-i18n="modal.save">Save</button>
+    <p class="anniv-line"><span data-i18n="settings.anniv">Anniversary</span>: <strong id="annivText"></strong></p>
+    <button id="playMusicBtn" class="btn btn-ghost" data-i18n="hero.play">🎵 Play Our Song</button>
+  </div>
+</section>
+
 <footer>
   <p><span data-i18n="footer.made">Made with 💚 just for</span> <span id="footerName">her</span> • <span id="footerDate"></span></p>
   <p class="small" data-i18n="footer.offline">Share this file with her — works offline on phone.</p>
@@ -173,20 +185,7 @@
   <p id="lbCap"></p>
 </div>
 
-<!-- MODAL: Edit Names -->
-<div id="nameModal" class="modal">
-  <div class="modal-card">
-    <h3 data-i18n="modal.customize">Customize your site ✨</h3>
-    <label><span data-i18n="modal.her">Her Name</span> <input id="inputHer" data-i18n-ph="modal.herPh" placeholder="e.g. Ananya"></label>
-    <label><span data-i18n="modal.me">Your Name</span> <input id="inputMe" data-i18n-ph="modal.mePh" placeholder="e.g. Rohan"></label>
-    <label><span data-i18n="modal.since">Since Date</span> <input id="inputDate" type="date"></label>
-    <div class="modal-btns">
-      <button id="saveNames" class="btn btn-primary" data-i18n="modal.save">Save</button>
-      <button id="closeModal" class="btn btn-ghost" data-i18n="modal.cancel">Cancel</button>
-    </div>
-    <p class="hint" data-i18n="modal.savedHint">Saved on this device only — so you can keep it private.</p>
-  </div>
-</div>
+<!-- Names & anniversary now live in the #settings section -->
 
 <!-- MODAL: Edit Letter -->
 <div id="editModal" class="modal">

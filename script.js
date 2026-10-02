@@ -11,7 +11,7 @@ const LS = {
 /* ---------- i18n dictionary (English + Burmese) ---------- */
 const I18N = {
 en: {
-  "nav.home":"Home","nav.letters":"Letters","nav.photos":"Photos","nav.story":"Our Story","nav.reasons":"Reasons",
+  "nav.home":"Home","nav.letters":"Letters","nav.photos":"Photos","nav.story":"Our Story","nav.reasons":"Reasons","nav.settings":"Settings",
   "hero.eyebrow":"For the most beautiful soul","hero.forever":"Forever & Always",
   "hero.desc":"Every photo, every word on this website is a piece of my heart, made just for you.",
   "hero.days":"Days","hero.hours":"Hours","hero.mins":"Minutes",
@@ -36,6 +36,7 @@ en: {
   "final.body":"I made this little corner of the internet just for you. Every word here is true, every photo is precious to me. No matter where we are, you can open this on your phone and know how deeply you are loved. You are my today and all of my tomorrows. Yours, always.",
   "final.edit":"Edit this letter",
   "footer.made":"Made with 💚 just for","footer.offline":"Share this file with her — works offline on phone.",
+  "settings.tag":"Settings","settings.title":"Site settings","settings.anniv":"Anniversary",
   "sync.on":"☁️ Synced across devices","sync.off":"📴 This device only (cloud off)",
   "sync.tip":"If OFF, tap shows the error. Usually: URL/key pasted, anonymous sign-in on, setup SQL run (see README).",
   "modal.customize":"Customize your site ✨","modal.her":"Her Name","modal.me":"Your Name","modal.since":"Since Date",
@@ -49,7 +50,7 @@ en: {
   "js.myLove":"My Love","js.iLoveYou":"I love you...","js.favPersonCap":"My favorite person ♡"
 },
 my: {
-  "nav.home":"ပင်မ","nav.letters":"စာများ","nav.photos":"ဓာတ်ပုံများ","nav.story":"ကျွန်ုပ်တို့ဇာတ်လမ်း","nav.reasons":"အကြောင်းရင်းများ",
+  "nav.home":"ပင်မ","nav.letters":"စာများ","nav.photos":"ဓာတ်ပုံများ","nav.story":"ကျွန်ုပ်တို့ဇာတ်လမ်း","nav.reasons":"အကြောင်းရင်းများ","nav.settings":"ဆက်တင်",
   "hero.eyebrow":"အလှဆုံးသော စိတ်ဝိဉာဉ်လေးအတွက်","hero.forever":"ထာဝရ နှင့် အမြဲတမ်း",
   "hero.desc":"ဒီဝက်ဘ်ဆိုက်ထဲက ဓာတ်ပုံတိုင်း၊ စာတိုင်းဟာ မမတစ်ယောက်တည်းအတွက် ရည်ရွယ်ထားတဲ့ မောင့်နှလုံးသားရဲ့ အစိတ်အပိုင်းလေးတွေပါ။",
   "hero.days":"ရက်","hero.hours":"နာရီ","hero.mins":"မိနစ်",
@@ -74,6 +75,7 @@ my: {
   "final.body":"အင်တာနက်ရဲ့ ထောင့်သေးသေးလေးတစ်ခုကို မမတစ်ယောက်တည်းအတွက် ဖန်တီးထားတာပါ။ ဒီစာတိုင်းဟာ အမှန်တွေချည်းပဲ၊ ဓာတ်ပုံတိုင်းဟာ မောင့်အတွက် တန်ဖိုးအရှိဆုံးတွေပါ။ ဘယ်နေရာရောက်ရောက် ဖုန်းလေးဖွင့်ပြီး မမ ဘယ်လောက်ချစ်ခံနေရလဲဆိုတာ သိနိုင်ပါတယ်။ မမဟာ မောင့်ရဲ့ ဒီနေ့ရော၊ မနက်ဖြန်တိုင်းရောပါပဲ။ အမြဲချစ်နေမယ့်သူ။",
   "final.edit":"ဒီစာကို ပြင်ရန်",
   "footer.made":"💚 ဖြင့် ပြုလုပ်ထားသည်","footer.offline":"ဒီဖိုင်ကို သူနဲ့ မျှဝေလိုက်ပါ — ဖုန်းမှာ အော့ဖ်လိုင်း အလုပ်လုပ်ပါတယ်။",
+  "settings.tag":"ဆက်တင်","settings.title":"ဆိုက်ဆက်တင်","settings.anniv":"နှစ်ပတ်လည်နေ့",
   "sync.on":"☁️ စက်အားလုံး sync လုပ်ပြီးပါပြီ","sync.off":"📴 ဒီစက်ထဲမှာသာ ရှိသေးတယ် (cloud မချိတ်သေးပါ)",
   "sync.tip":"OFF ပြနေရင် badge ကိုတို့ပြီး error ကြည့်ပါ။ အများစုက: URL/key ထည့်ပြီးလား၊ anonymous sign-in ဖွင့်လား၊ SQL run ပြီးလား (README ကြည့်)။",
   "modal.customize":"သင့်ဆိုက်ကို စိတ်ကြိုက်ပြင်ပါ ✨","modal.her":"သူ့နာမည်","modal.me":"သင့်နာမည်","modal.since":"စတင်ခဲ့သည့် ရက်စွဲ",
@@ -169,7 +171,7 @@ async function ensurePhotosSynced(){
   try{
     let touched = false;
     for(const p of photos){
-      if(!p.sb && p.src){
+      if(!p.sb && p.src && !isDemoSrc(p.src)){
         try{
           if(p.src.indexOf('data:') === 0){
             const blob = await (await fetch(p.src)).blob();
@@ -200,9 +202,21 @@ function mergePhotosWithPending(list){
   const pending = photos.filter(p=>!p.sb && p.src && !have[effSrc(p)]);
   return pending.concat(list);
 }
+/* Delete leftover sample-photo rows from the cloud (runs on every device) */
+async function purgeDemoRows(rows){
+  if(!Cloud.sb) return rows.filter(r=>!isDemoSrc(r.src));
+  const keep = [];
+  for(const r of rows){
+    if(isDemoSrc(r.src)){
+      try{ await Cloud.sb.from('photos').delete().eq('id', r.sb); }catch(e){}
+    }else keep.push(r);
+  }
+  return keep;
+}
 async function reloadPhotosFromCloud(){
   try{
-    const rows = await Cloud.fetchPhotos();
+    let rows = await Cloud.fetchPhotos();
+    rows = await purgeDemoRows(rows);
     const list = mergePhotosWithPending(rows.map(r=>({sb: r.sb, src: r.src, cloudPath: r.cloudPath, cap: r.cap})));
     if(samePhotoList(photos.map(p=>({src: effSrc(p), cap: p.cap || ''})), list)) return;
     photos = list;
@@ -212,7 +226,8 @@ async function reloadPhotosFromCloud(){
 }
 async function photoSyncStart(){
   try{
-    const rows = await Cloud.fetchPhotos();
+    let rows = await Cloud.fetchPhotos();
+    rows = await purgeDemoRows(rows);
     if(!rows.length){
       if(photos.length) ensurePhotosSynced();
     }else{
@@ -312,21 +327,19 @@ function isDefaultLetters(arr){
   return JSON.stringify(arr)===JSON.stringify(defaultLetters_en) || JSON.stringify(arr)===JSON.stringify(defaultLetters_my);
 }
 
-/* ---------- Names & Counter ---------- */
-let names = JSON.parse(localStorage.getItem(LS.names) || 'null') || { her: "My Princess", me: "Me", since: "" };
+/* ---------- Names & Counter (anniversary is fixed: 2 Oct 2026, 9:01 AM) ---------- */
+const ANNIVERSARY = new Date(2026, 9, 2, 9, 1, 0);
+let names = JSON.parse(localStorage.getItem(LS.names) || 'null') || null;
+names = {her: (names && names.her) || 'My Princess', me: (names && names.me) || 'Me'};
 
 function renderNames(){
   document.getElementById('herNameDisplay').textContent = names.her;
   document.getElementById('myNameDisplay').textContent = names.me;
   document.getElementById('footerName').textContent = names.her;
   document.getElementById('signName').textContent = names.me;
-  if(names.since){
-    const d = new Date(names.since);
-    document.getElementById('sinceDateText').textContent = d.toLocaleDateString(lang==='my'?'my-MM':'en-IN',{day:'numeric',month:'long',year:'numeric'});
-    startCounter(d);
-  } else {
-    document.getElementById('sinceDateText').textContent = t('hero.pickDate');
-  }
+  document.getElementById('sinceDateText').textContent = ANNIVERSARY.toLocaleDateString(lang==='my'?'my-MM':'en-IN',{day:'numeric',month:'long',year:'numeric'});
+  startCounter(ANNIVERSARY);
+  fillSettings();
 }
 let counterInterval;
 function startCounter(since){
@@ -346,23 +359,21 @@ function startCounter(since){
 renderNames();
 document.getElementById('footerDate').textContent = new Date().getFullYear();
 
-/* Name modal */
-const nameModal = document.getElementById('nameModal');
-document.getElementById('editNamesBtn').onclick = ()=>{
-  document.getElementById('inputHer').value = names.her;
-  document.getElementById('inputMe').value = names.me;
-  document.getElementById('inputDate').value = names.since;
-  nameModal.classList.add('open');
-};
-document.getElementById('closeModal').onclick = ()=> nameModal.classList.remove('open');
-nameModal.onclick = e => { if(e.target===nameModal) nameModal.classList.remove('open') };
-document.getElementById('saveNames').onclick = ()=>{
-  names.her = document.getElementById('inputHer').value.trim() || names.her;
-  names.me = document.getElementById('inputMe').value.trim() || names.me;
-  names.since = document.getElementById('inputDate').value;
+/* Settings tab: names editable here, anniversary fixed */
+function fillSettings(){
+  const h = document.getElementById('setHer'), m = document.getElementById('setMe');
+  if(h && document.activeElement !== h) h.value = names.her;
+  if(m && document.activeElement !== m) m.value = names.me;
+  const a = document.getElementById('annivText');
+  if(a) a.textContent = ANNIVERSARY.toLocaleDateString(lang==='my'?'my-MM':'en-IN',{day:'numeric',month:'long',year:'numeric'}) + ', ' + ANNIVERSARY.toLocaleTimeString(lang==='my'?'my-MM':'en-IN',{hour:'numeric',minute:'2-digit'});
+}
+document.getElementById('saveSettings').onclick = ()=>{
+  const h = document.getElementById('setHer').value.trim();
+  const m = document.getElementById('setMe').value.trim();
+  if(h) names.her = h;
+  if(m) names.me = m;
   persistNames();
   renderNames();
-  nameModal.classList.remove('open');
 };
 
 /* ---------- Letters ---------- */
@@ -438,12 +449,10 @@ const demo = [
   "https://images.unsplash.com/photo-1494774157365-9e04c6720e47?w=600&q=80",
   "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&q=80"
 ];
-let photos = JSON.parse(localStorage.getItem(LS.photos) || 'null');
-if(!photos){
-  const caps = lang==='my' ? demoCaps_my : demoCaps_en;
-  photos = demo.map((src,i)=>({src, cap: caps[i%caps.length]}));
-}
+function isDemoSrc(s){ return !!s && s.indexOf('unsplash.com') !== -1; }
+let photos = JSON.parse(localStorage.getItem(LS.photos) || 'null') || [];
 photos.forEach(p=>{ if(p.id) delete p.id; }); /* legacy Firestore ids are unused now */
+photos = photos.filter(p=>p && p.src && !isDemoSrc(p.src)); /* samples out, lover's photos only */
 
 function renderGallery(){
   galleryGrid.innerHTML = photos.map((p,i)=>`
@@ -724,8 +733,8 @@ function startSiteRealtime(){
       .subscribe((status, err)=>{ if(err) Cloud.lastError = 'site listen: ' + (err.message || err); });
   }catch(e){ Cloud.lastError = 'site listen: ' + (e.code||e.message||e); }
 }
-const DEFAULT_NAMES_LIT = {her: 'My Princess', me: 'Me', since: ''};
-const applyNames = v=>{ if(v && typeof v === 'object'){ names = Object.assign({her:'My Princess', me:'Me', since:''}, v); renderNames(); } };
+const DEFAULT_NAMES_LIT = {her: 'My Princess', me: 'Me'};
+const applyNames = v=>{ if(v && typeof v === 'object'){ names = {her: v.her || 'My Princess', me: v.me || 'Me'}; renderNames(); } };
 const applyLetters = v=>{ if(Array.isArray(v)){ letters = v; renderLetters(); } };
 const applyTimeline = v=>{ if(Array.isArray(v)){ timelineItems = v; renderStoredTimeline(); } };
 const applyFinal = v=>{ if(typeof v === 'string' && v) setFinalText(v); };
