@@ -155,7 +155,8 @@ img{max-width:100%;display:block}
 /* timeline */
 .timeline{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:18px;position:relative}
 .timeline::before{content:"";position:absolute;left:15px;top:10px;bottom:10px;width:2px;background:#dcfce7}
-.t-item{display:flex;gap:14px;align-items:flex-start}
+.t-item{display:flex;gap:14px;align-items:flex-start;cursor:pointer}
+.t-item:hover .t-card{border-color:#86efac}
 .t-dot{width:32px;height:32px;border-radius:50%;background:#fff;border:2px solid #86efac;display:grid;place-items:center;font-size:14px;z-index:1;flex-shrink:0}
 .t-card{background:#fff;border:1px solid #dcfce7;border-radius:16px;padding:14px;flex:1;box-shadow:var(--shadow)}
 .t-card h3{font-size:15px}
@@ -206,9 +207,9 @@ footer .small{font-size:11px;margin-top:4px}
 .modal-card{background:#fff;border-radius:18px;padding:20px;width:100%;max-width:420px;box-shadow:var(--shadow)}
 .modal-card h3{margin-bottom:12px}
 .modal-card label{display:block;font-size:13px;margin:10px 0}
-.modal-card input,.modal-card textarea{
+.modal-card input,.modal-card textarea,.modal-card select{
   width:100%;margin-top:6px;padding:10px 12px;border:1px solid #dcfce7;border-radius:10px;
-  font-family:inherit;font-size:14px;
+  font-family:inherit;font-size:14px;background:#fff;
 }
 .modal-btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
 .danger{color:var(--rose);border-color:#bbf7d0}

@@ -25,7 +25,7 @@ en: {
   "gallery.sub":"Upload her photos. They will stay in your browser (private to your phone).",
   "gallery.add":"📸 Add Photos",
   "gallery.hint":"Tip: Tap any photo to view full screen. Long-press to delete (on phone).",
-  "story.tag":"Our Story","story.title":"How our love grew",
+  "story.tag":"Our Story","story.title":"How our love grew","story.sub":"Tap any memory to edit it","story.dateLabel":"Date label",
   "story.m1t":"The Day We Met","story.m1d":"The moment my world got brighter. I still remember your smile.","story.m1date":"Day 1",
   "story.m2t":"First Long Talk","story.m2d":"Hours felt like minutes. I knew you were special.","story.m2date":"Soon After",
   "story.m3t":"We Fell In Love","story.m3d":"And I never want to fall out of it.","story.m3date":"Forever",
@@ -42,8 +42,8 @@ en: {
   "modal.customize":"Customize your site ✨","modal.her":"Her Name","modal.me":"Your Name","modal.since":"Since Date",
   "modal.herPh":"e.g. Ananya","modal.mePh":"e.g. Rohan",
   "modal.save":"Save","modal.cancel":"Cancel","modal.savedHint":"Saved on this device only — so you can keep it private.",
-  "modal.editNote":"Edit Love Note","modal.title":"Title","modal.message":"Message","modal.delete":"Delete",
-  "js.confirmDeleteNote":"Delete this love note?",  "js.removePhoto":"Remove this photo?",
+  "modal.editNote":"Edit Love Note","modal.editMemory":"Edit Memory","modal.icon":"Icon","modal.title":"Title","modal.message":"Message","modal.delete":"Delete",
+  "js.confirmDeleteNote":"Delete this love note?",  "js.confirmDeleteMemory":"Delete this memory?",  "js.removePhoto":"Remove this photo?",
   "js.memTitle":"Memory title (e.g. Our first trip)","js.memDesc":"Short description","js.memDate":"Date label (e.g. 14 Feb 2024)",
   "js.editFinal":"Edit your final letter:",  "js.musicBlocked":"Tap again to allow music (browser blocked autoplay)",
   "js.storageFull":"This site's phone storage is full — delete some photos first, then add new ones.",
@@ -68,6 +68,7 @@ my: {
   "story.m1t":"ကျွန်ုပ်တို့ စတွေ့ခဲ့တဲ့နေ့","story.m1d":"မောင့်ကမ္ဘာ ပိုတောက်ပသွားတဲ့ အခိုက်အတန့်ပဲ။ မမအပြုံးကို ခုထိ မှတ်မိနေတုန်းပါ။","story.m1date":"နေ့ ၁",
   "story.m2t":"ပထမဆုံး စကားကြာကြာပြောဖြစ်ခြင်း","story.m2d":"နာရီတွေက မိနစ်တွေလို ထင်ခဲ့ရတယ်။ မမ တကယ်ထူးခြားတယ်ဆိုတာ သိလိုက်ပြီ။","story.m2date":"မကြာမီ",
   "story.m3t":"ကျွန်ုပ်တို့ ချစ်မိသွားပြီ","story.m3d":"ဒီအချစ်ထဲက ဘယ်တော့မှ မထွက်ချင်တော့ဘူး။","story.m3date":"ထာဝရ",
+  "story.sub":"အမှတ်တရတစ်ခုခုကို တို့ပြီး ပြင်နိုင်တယ်","story.dateLabel":"ရက်စွဲအညွှန်း",
   "story.add":"+ အမှတ်တရ ထည့်ရန်",
   "reasons.tag":"အကြောင်းပြချက် ၁၀၀","reasons.title":"မမကို ဘာလို့ ချစ်တာလဲ","reasons.sub":"အကြောင်းပြချက်အသစ်အတွက် တို့လိုက်ပါ","reasons.next":"နောက်အကြောင်းပြချက် 💚",
   "reasons.w1":"မမအပြုံး","reasons.w2":"မမကြင်နာမှု","reasons.w3":"မမမျက်ဝန်း","reasons.w4":"မမအသံ","reasons.w5":"မမဂရုစိုက်မှု","reasons.w6":"မမဝိဉာဉ်",
@@ -81,8 +82,8 @@ my: {
   "modal.customize":"သင့်ဆိုက်ကို စိတ်ကြိုက်ပြင်ပါ ✨","modal.her":"သူ့နာမည်","modal.me":"သင့်နာမည်","modal.since":"စတင်ခဲ့သည့် ရက်စွဲ",
   "modal.herPh":"ဥပမာ - သဲစု","modal.mePh":"ဥပမာ - အောင်မင်း",
   "modal.save":"သိမ်းရန်","modal.cancel":"မလုပ်တော့ပါ","modal.savedHint":"ဒီစက်ထဲမှာပဲ သိမ်းထားမယ် — လျှို့ဝှက်ထားနိုင်ပါတယ်။",
-  "modal.editNote":"ချစ်ခြင်းမှတ်စု ပြင်ရန်","modal.title":"ခေါင်းစဉ်","modal.message":"စာသား","modal.delete":"ဖျက်ရန်",
-  "js.confirmDeleteNote":"ဒီချစ်ခြင်းမှတ်စုကို ဖျက်မလား?",  "js.removePhoto":"ဒီဓာတ်ပုံကို ဖယ်ရှားမလား?",
+  "modal.editNote":"ချစ်ခြင်းမှတ်စု ပြင်ရန်","modal.editMemory":"အမှတ်တရ ပြင်ရန်","modal.icon":"အိုင်ကွန်","modal.title":"ခေါင်းစဉ်","modal.message":"စာသား","modal.delete":"ဖျက်ရန်",
+  "js.confirmDeleteNote":"ဒီချစ်ခြင်းမှတ်စုကို ဖျက်မလား?",  "js.confirmDeleteMemory":"ဒီအမှတ်တရကို ဖျက်မလား?",  "js.removePhoto":"ဒီဓာတ်ပုံကို ဖယ်ရှားမလား?",
   "js.memTitle":"အမှတ်တရ ခေါင်းစဉ် (ဥပမာ - ပထမဆုံး ခရီးစဉ်)","js.memDesc":"အကျဉ်းဖော်ပြချက်","js.memDate":"ရက်စွဲအညွှန်း (ဥပမာ - ၁၄ ဖေဖော်ဝါရီ ၂၀၂၄)",
   "js.editFinal":"နောက်ဆုံးစာကို ပြင်ရန်:",  "js.musicBlocked":"ထပ်တို့ပြီး ဂီတခွင့်ပြုပါ (ဘရောက်ဇာက ပိတ်ထားလို့ပါ)",
   "js.storageFull":"ဒီဆိုက်အတွက် ဖုန်းမှတ်ဉာဏ် ပြည့်နေပြီ — ဓာတ်ပုံအချို့ အရင်ဖျက်ပြီးမှ အသစ်ထည့်ပါ။",
@@ -256,15 +257,30 @@ function refreshSyncStatus(){
 function showSyncDiag(){
   alert((Cloud.ready ? t('sync.on') : t('sync.off')) + '\nError: ' + (Cloud.lastError || 'none') + '\n' + t('sync.tip'));
 }
-function renderStoredTimeline(){
-  document.querySelectorAll('#timeline .t-item[data-custom="1"]').forEach(el=>el.remove());
+const DEF_TIMELINE = [
+  {id: 'm1', emoji: '💫', def: true},
+  {id: 'm2', emoji: '💬', def: true},
+  {id: 'm3', emoji: '💚', def: true}
+];
+/* Old stored shape was a plain customs array — upgrade it, keeping user memories */
+function normalizeTimeline(v){
+  if(!Array.isArray(v)) return null;
+  if(!v.length) return DEF_TIMELINE.map(d=>({id: d.id, emoji: d.emoji, def: true}));
+  if(v[0].def !== undefined || v[0].id) return v;
+  const customs = v.map((it, i)=>({id: 'c' + Date.now() + '_' + i, emoji: '💚', title: it.title || '', desc: it.desc || '', date: it.date || ''}));
+  return DEF_TIMELINE.map(d=>({id: d.id, emoji: d.emoji, def: true})).concat(customs);
+}
+function timelineText(it){
+  if(it.def) return {title: t('story.' + it.id + 't'), desc: t('story.' + it.id + 'd'), date: t('story.' + it.id + 'date'), emoji: it.emoji || '💚'};
+  return {title: it.title || '', desc: it.desc || '', date: it.date || '', emoji: it.emoji || '💚'};
+}
+function renderTimeline(){
   const tl = document.getElementById('timeline');
-  timelineItems.forEach(it=>{
-    const div = document.createElement('div');
-    div.className = 't-item'; div.dataset.custom = '1';
-    div.innerHTML = '<span class="t-dot">💚</span><div class="t-card"><h3>' + esc(it.title || '') + '</h3><p>' + esc(it.desc || '') + '</p><span class="t-date">' + esc(it.date || '') + '</span></div>';
-    tl.appendChild(div);
-  });
+  tl.innerHTML = timelineItems.map(it=>{
+    const v = timelineText(it);
+    return '<div class="t-item" data-tid="' + it.id + '"><span class="t-dot">' + v.emoji + '</span><div class="t-card"><h3>' + esc(v.title) + '</h3><p>' + esc(v.desc) + '</p><span class="t-date">' + esc(v.date) + '</span></div></div>';
+  }).join('');
+  tl.querySelectorAll('.t-item').forEach(el=>{ el.onclick = ()=> openTimelineEditor(el.dataset.tid); });
 }
 
 /* Default Love Texts - EDIT THESE TO YOUR OWN */
@@ -583,21 +599,64 @@ function openLightbox(i){
 document.getElementById('lbClose').onclick = ()=> lb.classList.remove('open');
 lb.onclick = e=> { if(e.target===lb) lb.classList.remove('open') }
 
-/* Timeline (user-added memories persist per device + cloud) */
-let timelineItems = JSON.parse(localStorage.getItem(LS.timeline) || 'null') || [];
-renderStoredTimeline();
+/* Timeline (every memory editable, persists per device + cloud) */
+let timelineItems = normalizeTimeline(JSON.parse(localStorage.getItem(LS.timeline) || 'null')) || DEF_TIMELINE.map(d=>({id: d.id, emoji: d.emoji, def: true}));
+renderTimeline();
 const storedFinal = localStorage.getItem(LS.final);
 if(storedFinal){ setFinalText(storedFinal); }
 
-/* Timeline add */
+/* Timeline add + edit (tap any card) */
+const tmModal = document.getElementById('tmModal');
+let tmId = null;
+function openTimelineEditor(tid){
+  const it = timelineItems.find(x=>x.id === tid);
+  if(!it) return;
+  const v = timelineText(it);
+  tmId = tid;
+  document.getElementById('tmTitle').value = v.title;
+  document.getElementById('tmDesc').value = v.desc;
+  document.getElementById('tmDate').value = v.date;
+  document.getElementById('tmEmoji').value = v.emoji;
+  document.getElementById('tmDelete').style.display = '';
+  tmModal.classList.add('open');
+}
 document.getElementById('addMemoryBtn').onclick = ()=>{
-  const title = prompt(t('js.memTitle'));
-  if(!title) return;
-  const desc = prompt(t('js.memDesc')) || "";
-  const date = prompt(t('js.memDate')) || "";
-  timelineItems.push({title: title, desc: desc, date: date});
+  tmId = null;
+  document.getElementById('tmTitle').value = '';
+  document.getElementById('tmDesc').value = '';
+  document.getElementById('tmDate').value = '';
+  document.getElementById('tmEmoji').value = '💚';
+  document.getElementById('tmDelete').style.display = 'none';
+  tmModal.classList.add('open');
+};
+document.getElementById('tmCancel').onclick = ()=> tmModal.classList.remove('open');
+tmModal.onclick = e=>{ if(e.target === tmModal) tmModal.classList.remove('open'); };
+document.getElementById('tmSave').onclick = ()=>{
+  const title = document.getElementById('tmTitle').value.trim();
+  const desc = document.getElementById('tmDesc').value.trim();
+  const date = document.getElementById('tmDate').value.trim();
+  const emoji = document.getElementById('tmEmoji').value || '💚';
+  if(tmId === null){
+    if(!title) return;
+    timelineItems.push({id: 'c' + Date.now(), emoji: emoji, title: title, desc: desc, date: date});
+  }else{
+    const it = timelineItems.find(x=>x.id === tmId);
+    if(!it) return;
+    it.def = false; it.title = title; it.desc = desc; it.date = date; it.emoji = emoji;
+  }
+  tmModal.classList.remove('open');
   persistTimeline();
-  renderStoredTimeline();
+  renderTimeline();
+};
+document.getElementById('tmDelete').onclick = ()=>{
+  if(tmId === null) return;
+  const it = timelineItems.find(x=>x.id === tmId);
+  if(it && confirm(t('js.confirmDeleteMemory'))){
+    timelineItems = timelineItems.filter(x=>x.id !== tmId);
+    tmModal.classList.remove('open');
+    persistTimeline();
+    renderTimeline();
+  }
 };
 
 /* Reasons shuffle */
@@ -693,6 +752,7 @@ function applyLang(l){
     reasonText.textContent = list[0];
   }
   renderNames();
+  renderTimeline();
   refreshMusicBtn();
   refreshSyncStatus();
 }
@@ -736,7 +796,7 @@ function startSiteRealtime(){
 const DEFAULT_NAMES_LIT = {her: 'My Princess', me: 'Me'};
 const applyNames = v=>{ if(v && typeof v === 'object'){ names = {her: v.her || 'My Princess', me: v.me || 'Me'}; renderNames(); } };
 const applyLetters = v=>{ if(Array.isArray(v)){ letters = v; renderLetters(); } };
-const applyTimeline = v=>{ if(Array.isArray(v)){ timelineItems = v; renderStoredTimeline(); } };
+const applyTimeline = v=>{ const n = normalizeTimeline(v); if(n){ timelineItems = n; renderTimeline(); } };
 const applyFinal = v=>{ if(typeof v === 'string' && v) setFinalText(v); };
 function withTimeout(p, ms, label){
   return Promise.race([p, new Promise((resolve)=>setTimeout(()=>resolve('timeout'), ms || 25000))]).then(r=>{

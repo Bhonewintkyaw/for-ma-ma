@@ -113,20 +113,10 @@
   <div class="section-head">
     <span class="tag" data-i18n="story.tag">Our Story</span>
     <h2 data-i18n="story.title">How our love grew</h2>
+    <p data-i18n="story.sub">Tap any memory to edit it</p>
   </div>
   <div class="timeline" id="timeline">
-    <div class="t-item">
-      <span class="t-dot">💫</span>
-      <div class="t-card"><h3 data-i18n="story.m1t">The Day We Met</h3><p data-i18n="story.m1d">The moment my world got brighter. I still remember your smile.</p><span class="t-date" data-i18n="story.m1date">Day 1</span></div>
-    </div>
-    <div class="t-item">
-      <span class="t-dot">💬</span>
-      <div class="t-card"><h3 data-i18n="story.m2t">First Long Talk</h3><p data-i18n="story.m2d">Hours felt like minutes. I knew you were special.</p><span class="t-date" data-i18n="story.m2date">Soon After</span></div>
-    </div>
-    <div class="t-item">
-      <span class="t-dot">💚</span>
-      <div class="t-card"><h3 data-i18n="story.m3t">We Fell In Love</h3><p data-i18n="story.m3d">And I never want to fall out of it.</p><span class="t-date" data-i18n="story.m3date">Forever</span></div>
-    </div>
+    <!-- Memories rendered by JS (tap any card to edit) -->
   </div>
   <button id="addMemoryBtn" class="btn btn-ghost small" data-i18n="story.add">+ Add Memory</button>
 </section>
@@ -186,6 +176,32 @@
 </div>
 
 <!-- Names & anniversary now live in the #settings section -->
+
+<!-- MODAL: Edit Memory -->
+<div id="tmModal" class="modal">
+  <div class="modal-card">
+    <h3 data-i18n="modal.editMemory">Edit Memory</h3>
+    <label><span data-i18n="modal.title">Title</span> <input id="tmTitle" maxlength="60"></label>
+    <label><span data-i18n="modal.message">Message</span> <textarea id="tmDesc" rows="4"></textarea></label>
+    <label><span data-i18n="story.dateLabel">Date label</span> <input id="tmDate" maxlength="30"></label>
+    <label><span data-i18n="modal.icon">Icon</span>
+      <select id="tmEmoji">
+        <option value="💚">💚 heart</option>
+        <option value="💫">💫 stars</option>
+        <option value="💬">💬 chat</option>
+        <option value="🌸">🌸 flower</option>
+        <option value="🌙">🌙 moon</option>
+        <option value="✨">✨ sparkles</option>
+        <option value="💍">💍 ring</option>
+      </select>
+    </label>
+    <div class="modal-btns">
+      <button id="tmSave" class="btn btn-primary" data-i18n="modal.save">Save</button>
+      <button id="tmDelete" class="btn btn-ghost danger" data-i18n="modal.delete">Delete</button>
+      <button id="tmCancel" class="btn btn-ghost" data-i18n="modal.cancel">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL: Edit Letter -->
 <div id="editModal" class="modal">
