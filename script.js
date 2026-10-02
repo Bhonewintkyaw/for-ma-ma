@@ -172,6 +172,7 @@ function showLetter(idx){
 function openLetterModal(idx){
   showLetter(idx);
   if(letterModal){
+    letterModal.style.display = 'flex';
     letterModal.classList.add('open');
     document.body.classList.add('modal-open');
   }
@@ -179,6 +180,7 @@ function openLetterModal(idx){
 
 function closeLetterModal(){
   if(letterModal){
+    letterModal.style.display = 'none';
     letterModal.classList.remove('open');
     document.body.classList.remove('modal-open');
   }
@@ -234,6 +236,7 @@ function openLightbox(i){
   if(!PHOTOS[i]) return;
   showPhoto(i);
   if(lb){
+    lb.style.display = 'flex';
     lb.classList.add('open');
     document.body.classList.add('modal-open');
   }
@@ -241,6 +244,7 @@ function openLightbox(i){
 
 function closeLightbox(){
   if(lb){
+    lb.style.display = 'none';
     lb.classList.remove('open');
     document.body.classList.remove('modal-open');
   }
