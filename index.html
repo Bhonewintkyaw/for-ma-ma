@@ -62,8 +62,7 @@
   <div class="hero-photo-wrap">
     <div class="polaroid">
       <div class="polaroid-img" id="heroImg">
-        <span data-i18n="hero.tapPhoto">Tap to add your photo</span>
-        <input type="file" id="heroUpload" accept="image/*" hidden>
+        <img id="heroPhoto" alt="us">
       </div>
       <p data-i18n="hero.favPerson">my favorite person ♡</p>
     </div>
@@ -83,10 +82,6 @@
   <div class="letters-grid" id="lettersGrid">
     <!-- Cards injected by JS -->
   </div>
-
-  <div class="add-letter-wrap">
-    <button id="addLetterBtn" class="btn btn-ghost" data-i18n="letters.add">+ Add New Love Note</button>
-  </div>
 </section>
 
 <!-- GALLERY -->
@@ -95,11 +90,6 @@
     <span class="tag" data-i18n="gallery.tag">Her Gallery</span>
     <h2 data-i18n="gallery.title">Your beautiful moments</h2>
     <p data-i18n="gallery.sub">Upload her photos. They will stay in your browser (private to your phone).</p>
-  </div>
-
-  <div class="gallery-actions">
-    <label for="photoUpload" class="btn btn-primary" data-i18n="gallery.add">📸 Add Photos</label>
-    <input type="file" id="photoUpload" accept="image/*" multiple hidden>
   </div>
 
   <div class="gallery-grid" id="galleryGrid">
@@ -116,9 +106,8 @@
     <p data-i18n="story.sub">Tap any memory to edit it</p>
   </div>
   <div class="timeline" id="timeline">
-    <!-- Memories rendered by JS (tap any card to edit) -->
+    <!-- Memories rendered by JS -->
   </div>
-  <button id="addMemoryBtn" class="btn btn-ghost small" data-i18n="story.add">+ Add Memory</button>
 </section>
 
 <!-- REASONS -->
@@ -143,7 +132,6 @@
     <h2 data-i18n="final.title">To my love,</h2>
     <p id="finalLetterText" data-i18n="final.body">I made this little corner of the internet just for you. Every word here is true, every photo is precious to me. No matter where we are, you can open this on your phone and know how deeply you are loved. You are my today and all of my tomorrows. Yours, always.</p>
     <p class="sign">— <span id="signName">Your Love</span> 💚</p>
-    <button id="editFinalBtn" class="btn-small" data-i18n="final.edit">Edit this letter</button>
   </div>
 </section>
 
@@ -154,9 +142,8 @@
     <h2 data-i18n="settings.title">Site settings</h2>
   </div>
   <div class="settings-card">
-    <label><span data-i18n="modal.her">Her Name</span><input id="setHer" maxlength="30"></label>
-    <label><span data-i18n="modal.me">Your Name</span><input id="setMe" maxlength="30"></label>
-    <button id="saveSettings" class="btn btn-primary" data-i18n="modal.save">Save</button>
+    <p class="set-row"><span data-i18n="modal.her">Her Name</span>: <strong id="setHerName"></strong></p>
+    <p class="set-row"><span data-i18n="modal.me">Your Name</span>: <strong id="setMeName"></strong></p>
     <p class="anniv-line"><span data-i18n="settings.anniv">Anniversary</span>: <strong id="annivText"></strong></p>
     <button id="playMusicBtn" class="btn btn-ghost" data-i18n="hero.play">🎵 Play Our Song</button>
   </div>
@@ -164,8 +151,7 @@
 
 <footer>
   <p><span data-i18n="footer.made">Made with 💚 just for</span> <span id="footerName">her</span> • <span id="footerDate"></span></p>
-  <p class="small" data-i18n="footer.offline">Share this file with her — works offline on phone.</p>
-  <p class="small" id="syncStatus">📴</p>
+  <p class="small" data-i18n="footer.offline">Made with love, for us.</p>
 </footer>
 
 <!-- LIGHTBOX -->
@@ -177,50 +163,11 @@
 
 <!-- Names & anniversary now live in the #settings section -->
 
-<!-- MODAL: Edit Memory -->
-<div id="tmModal" class="modal">
-  <div class="modal-card">
-    <h3 data-i18n="modal.editMemory">Edit Memory</h3>
-    <label><span data-i18n="modal.title">Title</span> <input id="tmTitle" maxlength="60"></label>
-    <label><span data-i18n="modal.message">Message</span> <textarea id="tmDesc" rows="4"></textarea></label>
-    <label><span data-i18n="story.dateLabel">Date label</span> <input id="tmDate" maxlength="30"></label>
-    <label><span data-i18n="modal.icon">Icon</span>
-      <select id="tmEmoji">
-        <option value="💚">💚 heart</option>
-        <option value="💫">💫 stars</option>
-        <option value="💬">💬 chat</option>
-        <option value="🌸">🌸 flower</option>
-        <option value="🌙">🌙 moon</option>
-        <option value="✨">✨ sparkles</option>
-        <option value="💍">💍 ring</option>
-      </select>
-    </label>
-    <div class="modal-btns">
-      <button id="tmSave" class="btn btn-primary" data-i18n="modal.save">Save</button>
-      <button id="tmDelete" class="btn btn-ghost danger" data-i18n="modal.delete">Delete</button>
-      <button id="tmCancel" class="btn btn-ghost" data-i18n="modal.cancel">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: Edit Letter -->
-<div id="editModal" class="modal">
-  <div class="modal-card">
-    <h3 data-i18n="modal.editNote">Edit Love Note</h3>
-    <label><span data-i18n="modal.title">Title</span> <input id="editTitle"></label>
-    <label><span data-i18n="modal.message">Message</span> <textarea id="editMsg" rows="6"></textarea></label>
-    <div class="modal-btns">
-      <button id="saveEdit" class="btn btn-primary" data-i18n="modal.save">Save</button>
-      <button id="deleteEdit" class="btn btn-ghost danger" data-i18n="modal.delete">Delete</button>
-      <button id="cancelEdit" class="btn btn-ghost" data-i18n="modal.cancel">Cancel</button>
-    </div>
-  </div>
-</div>
+<!-- (edit popups removed — all content is fixed in code) -->
 
 <div id="ytPlayer" aria-hidden="true"></div>
 
-<!-- Supabase (cloud sync across devices; needs internet like fonts do) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- YouTube player API (our song) -->
 <script src="https://www.youtube.com/iframe_api"></script>
 <script src="script.js"></script>
 </body>

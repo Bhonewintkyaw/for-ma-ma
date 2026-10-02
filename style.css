@@ -331,4 +331,5 @@ body{min-height:100dvh;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .settings-card label{font-size:13px;font-weight:500}
 .settings-card input{width:100%;margin-top:6px;padding:10px 12px;border:1px solid #dcfce7;border-radius:10px;font-family:inherit;font-size:14px}
 .settings-card .btn{text-align:center}
+.set-row{font-size:14px;text-align:center}
 .anniv-line{font-size:14px;color:var(--muted);text-align:center}

@@ -2,20 +2,26 @@
 
 A romantic personal website — every photo and word is a piece of my heart.
 
-Static site with vanilla HTML/CSS/JS. Works offline on phone (photos + texts saved in `localStorage`).
+Static site (vanilla HTML/CSS/JS) on GitHub Pages. **No backend, no database,
+no accounts, no limits** — all content lives in the code, so every device
+shows exactly the same thing after each deploy (~1–2 min).
 
-## Features
-- Hero with names + days/hours/minutes counter since a date
-- Love letters (add / edit / delete)
-- Photo gallery (upload, lightbox, long-press delete)
-- Our Story timeline (+ add memories)
-- 100 Reasons shuffle card
-- Final letter + background music
-- Floating hearts background
-- Responsive: 16:9 desktop, 21:9 tall phones
-- 🌐 English / မြန်မာ language toggle (top-right `မြန်မာ` / `English` button, saved per device)
+## Update content (no database needed)
+
+- **Photos:** put JPG files in `photos/` named `photo1.jpg` … `photo8.jpg`
+  (phone photos are often HEIC — convert to JPG first, browsers can't show HEIC).
+  Captions live in the `PHOTOS` array at the top of `script.js`.
+- **Love letters:** edit `defaultLetters_my` (Burmese) / `defaultLetters_en`
+  (English) in `script.js`.
+- **Names / anniversary:** `HER_NAME`, `MY_NAME`, `ANNIVERSARY` in `script.js`.
+- **Timeline / reasons / final letter:** `TIMELINE_DEFS` (text via the
+  `story.*` i18n keys), `reasons_my` / `reasons_en`, `final.body`.
+- **Song:** `YT_VIDEO_ID` in `script.js`.
+
+Then commit + push — GitHub Pages redeploys automatically.
 
 ## Run locally
+
 ```powershell
 Set-Location -LiteralPath "D:\ForMaMa"
 python -m http.server 8000 --bind 0.0.0.0
@@ -24,52 +30,3 @@ python -m http.server 8000 --bind 0.0.0.0
 ```
 
 Or just open `index.html` in a browser.
-
-## Cross-device sync (Supabase, free)
-
-By default everything lives in each device's `localStorage`. To share photos +
-texts between two phones, enable cloud sync. Free tier (≈500MB database + 1GB
-photo storage + realtime) is plenty for personal use:
-
-1. Go to https://supabase.com → New project (free) → wait until it is ready.
-2. **SQL Editor** → New query → paste this → Run:
-   ```sql
-   create table if not exists site_data (
-     key text primary key,
-     data jsonb not null default '{}'::jsonb
-   );
-   create table if not exists photos (
-     id uuid primary key default gen_random_uuid(),
-     site text not null default 'shared',
-     src text not null,
-     path text not null default '',
-     cap text not null default '',
-     ts bigint not null default (extract(epoch from now())*1000)::bigint
-   );
-   alter table site_data enable row level security;
-   alter table photos enable row level security;
-   create policy "anon all site_data" on site_data
-     for all using (true) with check (true);
-   create policy "anon all photos" on photos
-     for all using (true) with check (true);
-   insert into storage.buckets (id, name, public)
-     values ('photos', 'photos', true)
-     on conflict (id) do update set public = true;
-   create policy "public read photos" on storage.objects
-     for select using (bucket_id = 'photos');
-   create policy "anon upload photos" on storage.objects
-     for insert with check (bucket_id = 'photos');
-   create policy "anon delete photos" on storage.objects
-     for delete using (bucket_id = 'photos');
-   create policy "anon update photos" on storage.objects
-     for update using (bucket_id = 'photos') with check (bucket_id = 'photos');
-   alter publication supabase_realtime add table site_data;
-   alter publication supabase_realtime add table photos;
-   ```
-3. **Authentication** → enable **Anonymous sign-ins**.
-4. **Project Settings → API** → copy the **Project URL** + **anon public key** →
-   paste them as `SUPABASE_URL` / `SUPABASE_ANON_KEY` in `script.js` →
-   commit + push.
-
-Notes: language choice stays per-device (not synced). Anyone opening the site
-gets anonymous access, so treat the URL as shared-private.
