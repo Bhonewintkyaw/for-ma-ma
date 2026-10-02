@@ -3,16 +3,16 @@
 A romantic personal website — every photo and word is a piece of my heart.
 
 Static site (vanilla HTML/CSS/JS) on GitHub Pages. **No backend, no database,
-no accounts, no limits** — all content lives in the code, so every device
-shows exactly the same thing after each deploy (~1–2 min).
+no accounts, no limits** — all content (including photos, embedded in
+`script.js`) lives in the code, so every device shows exactly the same thing
+after each deploy (~1–2 min). Burmese only.
 
 ## Update content (no database needed)
 
-- **Photos:** put JPG files in `photos/` named `photo1.jpg` … `photo8.jpg`
-  (phone photos are often HEIC — convert to JPG first, browsers can't show HEIC).
-  Captions live in the `PHOTOS` array at the top of `script.js`.
-- **Love letters:** edit `defaultLetters_my` (Burmese) / `defaultLetters_en`
-  (English) in `script.js`.
+- **Photos:** send new JPGs to the site keeper — they get embedded into the
+  `PHOTOS` array in `script.js` (with captions). Originals stay in
+  `photos/originals/` (not committed).
+- **Love letters:** edit `defaultLetters_my` in `script.js`.
 - **Names / anniversary:** `HER_NAME`, `MY_NAME`, `ANNIVERSARY` in `script.js`.
 - **Timeline / reasons / final letter:** `TIMELINE_DEFS` (text via the
   `story.*` i18n keys), `reasons_my` / `reasons_en`, `final.body`.
